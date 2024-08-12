@@ -1,0 +1,43 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.adapterTargetName": "esp32s3",
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.espIdfPathWin": "C:\\Users\\ADMIN\\esp\\esp-idf",
+  "idf.pythonBinPathWin": "c:\\Matias\\Espressif\\python_env\\idf5.1_py3.11_env\\Scripts\\python.exe",
+  "idf.toolsPathWin": "c:\\Matias\\Espressif",
+  "idf.customExtraPaths": "c:\\Matias\\Espressif\\tools\\xtensa-esp-elf-gdb\\12.1_20221002\\xtensa-esp-elf-gdb\\bin;c:\\Matias\\Espressif\\tools\\riscv32-esp-elf-gdb\\12.1_20221002\\riscv32-esp-elf-gdb\\bin;c:\\Matias\\Espressif\\tools\\xtensa-esp32-elf\\esp-12.2.0_20230208\\xtensa-esp32-elf\\bin;c:\\Matias\\Espressif\\tools\\xtensa-esp32s2-elf\\esp-12.2.0_20230208\\xtensa-esp32s2-elf\\bin;c:\\Matias\\Espressif\\tools\\xtensa-esp32s3-elf\\esp-12.2.0_20230208\\xtensa-esp32s3-elf\\bin;c:\\Matias\\Espressif\\tools\\riscv32-esp-elf\\esp-12.2.0_20230208\\riscv32-esp-elf\\bin;c:\\Matias\\Espressif\\tools\\esp32ulp-elf\\2.35_20220830\\esp32ulp-elf\\bin;c:\\Matias\\Espressif\\tools\\cmake\\3.24.0\\bin;c:\\Matias\\Espressif\\tools\\openocd-esp32\\v0.12.0-esp32-20230921\\openocd-esp32\\bin;c:\\Matias\\Espressif\\tools\\ninja\\1.10.2;c:\\Matias\\Espressif\\tools\\idf-exe\\1.0.3;c:\\Matias\\Espressif\\tools\\ccache\\4.8\\ccache-4.8-windows-x86_64;c:\\Matias\\Espressif\\tools\\dfu-util\\0.11\\dfu-util-0.11-win64;c:\\Matias\\Espressif\\tools\\esp-rom-elfs\\20230320",
+  "idf.customExtraVars": {
+    "OPENOCD_SCRIPTS": "c:\\Matias\\Espressif\\tools\\openocd-esp32\\v0.12.0-esp32-20230921/openocd-esp32/share/openocd/scripts",
+    "IDF_CCACHE_ENABLE": "1",
+    "ESP_ROM_ELF_DIR": "c:\\Matias\\Espressif\\tools\\esp-rom-elfs\\20230320/"
+  },
+  "idf.gitPathWin": "c:\\Matias\\Espressif\\tools\\idf-git\\2.30.1\\cmd\\git.exe",
+  "idf.portWin": "COM28",
+  "idf.flashType": "UART",
+  "files.associations": {
+    "led_strip.h": "c",
+    "nvs_flash.h": "c",
+    "bitset": "c",
+    "deque": "c",
+    "list": "c",
+    "string": "c",
+    "unordered_map": "c",
+    "vector": "c",
+    "functional": "c",
+    "tuple": "c",
+    "gpio.h": "c",
+    "esp_idf_version.h": "c",
+    "touch_sensor.h": "c",
+    "touch_sensor_common.h": "c",
+    "touch_sensor_types.h": "c",
+    "*.tcc": "c",
+    "charconv": "c",
+    "exception": "c",
+    "fstream": "c",
+    "limits": "c",
+    "sstream": "c",
+    "*.inc": "c"
+  }
+}

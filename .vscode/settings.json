@@ -38,6 +38,10 @@
     "fstream": "c",
     "limits": "c",
     "sstream": "c",
-    "*.inc": "c"
+    "*.inc": "c",
+    "esp_log.h": "c",
+    "ledc.h": "c",
+    "esp_netif.h": "c",
+    "esp_timer.h": "c"
   }
 }

@@ -1,3 +1,9 @@
+/* branch v1.1
+   -Se agrega:
+   -Apagado/Encendido del equipo con entrada capacitiva (distinta a los volantes). OK.
+   -Detección de toque por pulso (si está entre 50 y 1000mS). Si detecta toque setea el umbral. Caso contrario no (bloqueo por agua).
+   -Reset de los capacitivos cuando se quedan bloqueados (Se prueba reset de esp32 primero). EN PROCESO
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +25,7 @@
 #include "nvs_flash.h"
 #include "led_strip.h"
 #include "driver/touch_sensor.h"
+#include "esp_timer.h"
 
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
@@ -38,7 +45,7 @@
 #define Touch_Fuga TOUCH_PAD_NUM5
 #define Touch_Caudal_Sube TOUCH_PAD_NUM1
 #define Touch_Caudal_Baja TOUCH_PAD_NUM2
-
+#define Touch_ON TOUCH_PAD_NUM7
 #define adc_caliente ADC1_CHANNEL_7
 #define adc_fria ADC1_CHANNEL_5
 #define adc_natural ADC1_CHANNEL_6
@@ -70,6 +77,14 @@
 #define BUF_SIZE 1024
 #define TASK_MEMORY 1024 * 4
 
+typedef enum
+{
+    WAIT_FOR_TOUCH,
+    TOUCH_DETECTED,
+    VALIDATE_PULSE,
+    // SET_THRESHOLD
+} touch_state_t;
+
 bool B_Fria_Up = 0;
 bool B_Fria_Down = 1;
 bool B_Caliente_Up = 0;
@@ -95,6 +110,13 @@ bool EV6 = 0;
 
 #endif
 
+static touch_state_t touch_state = WAIT_FOR_TOUCH;
+
+static int64_t touch_start_time = 0;
+static int64_t touch_duration = 0;
+static const int64_t MIN_PULSE_DURATION_MS = 50;   // Tiempo mínimo del toque
+static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
+
 float b_perc = 0.5;
 float r_perc = 0.5;
 
@@ -111,15 +133,53 @@ static const char *tag = "Main";
 static const char *tag2 = "UART";
 TimerHandle_t xTimers;
 
+// variables IN capacitivas:
+// valores instantaneos:
 uint32_t filtered_Nivel;
 uint32_t filtered_Fuga;
 uint32_t filtered_Caudal_Up;
-uint32_t filtered_Caudal_Down, filtered_Caudal_Down_Touch;
+uint32_t filtered_Caudal_Down;
+
+// valores base:
 uint32_t filtered_Caudal_Down_Base;
-uint32_t filtered_Caudal_Up_Base, filtered_Caudal_Up_Touch;
+uint32_t filtered_Caudal_Up_Base;
 uint32_t filtered_Nivel_Base;
 uint32_t filtered_Fuga_Base;
+uint32_t filtered_Touch_ON_Base;
+
+// valores touch:
+uint32_t filtered_Caudal_Up_Touch;
+uint32_t filtered_Caudal_Down_Touch;
+uint32_t filtered_Nivel_Base_Touch;
+uint32_t filtered_Fuga_Base_Touch;
+uint32_t filtered_Touch_ON;
+
+// valores anteriores (para ver si se bloquean las entradas):
+uint32_t filtered_Nivel_Ant;
+uint32_t filtered_Fuga_Ant;
+uint32_t filtered_Caudal_Down_Ant;
+uint32_t filtered_Caudal_Up_Ant;
+
+// valor umbral para detectar toque:
+uint32_t filtered_Nivel_Th;
+uint32_t filtered_Fuga_Th;
+uint32_t filtered_Caudal_Down_Th;
+uint32_t filtered_Caudal_Up_Th;
+
+// valores de toque pendientes de validación:
+uint32_t filtered_Nivel_Touch_toValidate;
+uint32_t filtered_Fuga_Touch_toValidate;
+uint32_t filtered_Caudal_Down_Touch_toValidate;
+uint32_t filtered_Caudal_Up_Touch_toValidate;
+
+// valores de toque ya validados:
+uint32_t filtered_Nivel_Touch_Validated;
+uint32_t filtered_Fuga_Touch_Validated;
+uint32_t filtered_Caudal_Down_Touch_Validated;
+uint32_t filtered_Caudal_Up_Touch_Validated;
+
 uint8_t calib = 100;
+uint8_t on_off_debounce = 20;
 
 float caudal = 0.6;
 
@@ -297,16 +357,17 @@ void app_main()
     while (1)
     {
         touch_read();
-        // if (first_on)
-        // {
-        //     r_int = 0;
-        //     b_int = 0;
-        // }
-        // else
-        // {
-        //     r_int = (uint32_t)r;
-        //     b_int = (uint32_t)b;
-        // }
+        // donde esta first_on es la logica de encendido/apagado del equipo
+        if (first_on) // apagado
+        {
+            r_int = 0;
+            b_int = 0;
+        }
+        else // encendido
+        {
+            r_int = (uint32_t)r;
+            b_int = (uint32_t)b;
+        }
         if (calib_stage == CALIB_STAGE_3)
         {
             for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
@@ -340,11 +401,12 @@ void inicio_hw(void)
 
     touch_pad_init();
     // touch_pad_set_voltage(TOUCH_HVOLT_2V4, TOUCH_LVOLT_0V8, TOUCH_HVOLT_ATTEN_1V5);
-    touch_pad_set_voltage(TOUCH_HVOLT_2V4, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_1V); // Chat GPT
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5); // Chat GPT
     touch_pad_config(Touch_Nivel);
     touch_pad_config(Touch_Fuga);
     touch_pad_config(Touch_Caudal_Sube);
     touch_pad_config(Touch_Caudal_Baja);
+    touch_pad_config(Touch_ON);
     // touch_pad_config(Touch_Fria, -1);
     // touch_pad_config(Touch_Caliente, -1);
     // touch_pad_config(Touch_Gasificada, -1);
@@ -411,22 +473,16 @@ static void init_uart(void)
 
 void touch_read(void)
 {
-    // touch_pad_read_filtered(Touch_Nivel, &filtered_Nivel);
-    // printf("------- Nivel ---------\n");
     touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel);
-    // printf("touch 2 = %ld\n ", filtered_Nivel);
+    // probar que pasa cuando se cambia por touch_pad_read_filtered
     touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga);
-    // printf("touch 4 = %ld\n ", filtered_Fuga);
     touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down);
-    // printf("touch 1 = %ld\n ", filtered_Caudal_Down);
     touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up);
-    // printf("touch 3 = %ld\n ", filtered_Caudal_Up);
-    //  touch_pad_read_filtered(Touch_Gasificada, &filtered_Gasificada);
-    //  touch_pad_read_filtered(Touch_Natural, &filtered_Natural);
-    //   printf("Nivel = %d Fria = %d Caliente = %d Gasificada = %d Natural = %d\n", filtered_Nivel, filtered_Fria, filtered_Caliente, filtered_Gasificada, filtered_Natural);
+    touch_pad_read_raw_data(Touch_ON, &filtered_Touch_ON);
 
     if (calib_stage == CALIB_STAGE_3)
     {
+        uint8_t cont_stuck = 0;
         if (count_touch_read > 0)
         {
             count_touch_read--;
@@ -434,13 +490,29 @@ void touch_read(void)
         else
         {
             count_touch_read = 10;
+            // if ((filtered_Nivel_Ant == filtered_Nivel) && (filtered_Fuga_Ant == filtered_Fuga) && (filtered_Caudal_Down == filtered_Caudal_Down_Ant) && (filtered_Caudal_Up == filtered_Caudal_Up_Ant))
+            // {
+            //     cont_stuck++;
+            //     if (cont_stuck > 3)
+            //     {
+            //         esp_restart();
+            //     }
+            // }
             printf("------Nivel-------\n");
-            printf("touch 1 = %ld\n ", filtered_Caudal_Down);
+            // printf("touch 1 = %ld\n ", filtered_Caudal_Down);
             printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch);
-            printf("touch 2 = %ld\n ", filtered_Nivel);
-            printf("touch 3 = %ld\n ", filtered_Caudal_Up);
+            printf("touch 1 threshold = %ld\n ", filtered_Caudal_Down_Th);
+            // printf("touch 2 = %ld\n ", filtered_Nivel);
+            // printf("touch 3 = %ld\n ", filtered_Caudal_Up);
             printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch);
-            printf("touch 4 = %ld\n ", filtered_Fuga);
+            printf("touch 3 threshold = %ld\n ", filtered_Caudal_Up_Th);
+            // printf("touch 4 = %ld\n ", filtered_Fuga);
+            // printf("touch on = %ld\n ", filtered_Touch_ON);
+            // printf("touch on base = %ld\n ", filtered_Touch_ON_Base);
+            touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
+            touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
+            touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down_Ant);
+            touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up_Ant);
         }
     }
 
@@ -466,7 +538,7 @@ void touch_read(void)
         printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Base);
         filtered_Nivel_Base = filtered_Nivel;
         filtered_Fuga_Base = filtered_Fuga;
-
+        filtered_Touch_ON_Base = filtered_Touch_ON;
         if (xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) != pdFALSE)
         {
             xTicksToWait = xInitialTimeout;
@@ -483,15 +555,17 @@ void touch_read(void)
         }
         led_strip_refresh(led_strip);
 
-        if (filtered_Caudal_Down > 1.5 * filtered_Caudal_Down_Base)
+        if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
         {
             filtered_Caudal_Down_Touch = filtered_Caudal_Down;
+            filtered_Caudal_Down_Th = (uint32_t)(0.9 * filtered_Caudal_Down_Touch);
             printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch);
         }
 
-        if (filtered_Caudal_Up > 1.5 * filtered_Caudal_Up_Base)
+        if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
         {
             filtered_Caudal_Up_Touch = filtered_Caudal_Up;
+            filtered_Caudal_Up_Th = (uint32_t)(0.9 * filtered_Caudal_Up_Touch);
             printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch);
         }
 
@@ -514,160 +588,251 @@ void touch_read(void)
         }
         break;
     case CALIB_STAGE_3:
+        if (filtered_Touch_ON > 1.5 * filtered_Touch_ON_Base)
+        {
+            if (on_off_debounce)
+            {
+                on_off_debounce--;
+            }
+
+            if (!on_off_debounce)
+            {
+                on_off_debounce = 20; // mejorar esto cambiandolo por timeout
+                first_on = !first_on; // cambia de apagado a encendido y viceversa
+                if (first_on)
+                {
+                    printf("ESTADO OFF");
+                    if (!count_mot_off)
+                    {
+                        count_mot_off = 100; // para apagado de motores
+                    }
+                }
+                else
+                {
+                    printf("ESTADO ON");
+                }
+            }
+        }
+        else
+        {
+            on_off_debounce = 20;
+        }
         break;
     }
 
-    if ((filtered_Nivel > (filtered_Nivel_Base * 1.5 /*1.03*/)) && (filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)))
+    if ((calib_stage == CALIB_STAGE_3) && (!first_on))
     {
-        if (b_perc < 1 && r_perc > 0)
+        if ((filtered_Nivel > (filtered_Nivel_Base * 1.5 /*1.03*/)) && (filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)))
         {
-            b_perc += 0.1;
-            r_perc -= 0.1;
-            r = r_perc * 255;
-            b = b_perc * 255;
-            r_int = (uint32_t)(r);
-            b_int = (uint32_t)(b);
-        }
+            if (b_perc < 1 && r_perc > 0)
+            {
+                b_perc += 0.1;
+                r_perc -= 0.1;
+                r = r_perc * 255;
+                b = b_perc * 255;
+                r_int = (uint32_t)(r);
+                b_int = (uint32_t)(b);
+            }
 
 #ifdef VALV_MODUL
-        B_Caliente_Down = 0;
-        B_Caliente_Up = 1;
+            B_Caliente_Down = 0;
+            B_Caliente_Up = 1;
 #endif
-    }
-
-    if ((filtered_Fuga > (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
-    {
-        if (r_perc < 1 && b_perc > 0)
-        {
-            r_perc += 0.1;
-            b_perc -= 0.1;
-            r = r_perc * 255;
-            b = b_perc * 255;
-            r_int = (uint32_t)(r);
-            b_int = (uint32_t)(b);
         }
+
+        if ((filtered_Fuga > (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
+        {
+            if (r_perc < 1 && b_perc > 0)
+            {
+                r_perc += 0.1;
+                b_perc -= 0.1;
+                r = r_perc * 255;
+                b = b_perc * 255;
+                r_int = (uint32_t)(r);
+                b_int = (uint32_t)(b);
+            }
 
 #ifdef VALV_MODUL
-        B_Caliente_Down = 1;
-        B_Caliente_Up = 0;
+            B_Caliente_Down = 1;
+            B_Caliente_Up = 0;
 #endif
-    }
+        }
 
-    if ((filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
-    {
-        r_int = (uint32_t)r;
-        b_int = (uint32_t)b;
-        B_Caliente_Up = 1;
-        B_Caliente_Down = 1;
-    }
-    if ((filtered_Caudal_Up > (filtered_Caudal_Up_Touch * 0.8 /*1.03*/)) && (filtered_Caudal_Up > filtered_Caudal_Down))
-    {
-        
-        // printf("touch 1 = %ld\n ", filtered_Caudal_Up);
+        if ((filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
+        {
+            r_int = (uint32_t)r;
+            b_int = (uint32_t)b;
+            B_Caliente_Up = 1;
+            B_Caliente_Down = 1;
+        }
+        if ((filtered_Caudal_Up > (filtered_Caudal_Up_Touch * 0.8 /*1.03*/)) && (filtered_Caudal_Up > filtered_Caudal_Down))
+        {
+            // printf("touch 1 = %ld\n ", filtered_Caudal_Up);
 #ifdef VALV_MODUL
-        if (B_Caliente_Down && B_Caliente_Up)
-        {
-            B_Fria_Up = 0;
-        }
+            if (B_Caliente_Down && B_Caliente_Up)
+            {
+                B_Fria_Up = 0;
+            }
 #endif
-        // if (caudal < 1)
-        // {
-        //     caudal += 0.1;
-        // }
+            // if (caudal < 1)
+            // {
+            //     caudal += 0.1;
+            // }
 
-        if (b_perc < 1 && r_perc > 0)
-        {
-            b_perc += 0.1;
-            r_perc -= 0.1;
-            r = r_perc * 255;
-            b = b_perc * 255;
-            r_int = (uint32_t)(r);
-            b_int = (uint32_t)(b);
+            if (b_perc < 1 && r_perc > 0)
+            {
+                b_perc += 0.1;
+                r_perc -= 0.1;
+                r = r_perc * 255;
+                b = b_perc * 255;
+                r_int = (uint32_t)(r);
+                b_int = (uint32_t)(b);
+            }
         }
-    }
-    else
-    {
-        B_Fria_Up = 1;
-    }
-    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch * 0.8) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
-    {
-        // printf("touch 2 = %ld\n ", filtered_Caudal_Down);
+        else
+        {
+            B_Fria_Up = 1;
+        }
+
+        ////////////////////////////
+        // maquina de estados para deteccion de pulsos de toque:
+        switch (touch_state)
+        {
+        case WAIT_FOR_TOUCH:
+            if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch * 0.8) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
+            {
+                touch_start_time = esp_timer_get_time();
+                printf("touch detection\n");
+                touch_state = TOUCH_DETECTED;
+                filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
+            }
+            else
+            {
+                B_Fria_Down = 1;
+            }
+            break;
+        case TOUCH_DETECTED:
+            if ((filtered_Caudal_Down <= filtered_Caudal_Down_Touch * 0.8))
+            {
+                touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
+                {
+                    touch_state = VALIDATE_PULSE;
+                }
+                else
+                {
+                    touch_state = WAIT_FOR_TOUCH;
+                    B_Fria_Down = 1;
+                    printf("touch rejected\n");
+                    printf("touch validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
+                }
+            }
+
+            break;
+        case VALIDATE_PULSE:
 #ifdef VALV_MODUL
-        if (B_Caliente_Down && B_Caliente_Up)
-        {
-            B_Fria_Down = 0;
-        }
+            if (B_Caliente_Down && B_Caliente_Up)
+            {
+                B_Fria_Down = 0;
+            }
 #endif
-        // if (caudal > 0.3)
-        // {
-        //     caudal -= 0.1;
-        // }
-
-        if (r_perc < 1 && b_perc > 0)
-        {
-            r_perc += 0.1;
-            b_perc -= 0.1;
-            r = r_perc * 255;
-            b = b_perc * 255;
-            r_int = (uint32_t)(r);
-            b_int = (uint32_t)(b);
+            if (r_perc < 1 && b_perc > 0)
+            {
+                r_perc += 0.1;
+                b_perc -= 0.1;
+                r = r_perc * 255;
+                b = b_perc * 255;
+                r_int = (uint32_t)(r);
+                b_int = (uint32_t)(b);
+            }
+            filtered_Caudal_Down_Touch_Validated = filtered_Caudal_Down_Touch_toValidate; // valido toque
+            printf("touch validated\n");
+            printf("touch validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
+            touch_state = WAIT_FOR_TOUCH;
+            break;
         }
-    }
-    else
-    {
-        B_Fria_Down = 1;
-    }
 
-    // r_int = (uint32_t)(r * caudal);
-    // b_int = (uint32_t)(b * caudal);
+//         if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch * 0.8) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
+//         {
+//             // printf("touch 2 = %ld\n ", filtered_Caudal_Down);
+
+// #ifdef VALV_MODUL
+//             if (B_Caliente_Down && B_Caliente_Up)
+//             {
+//                 B_Fria_Down = 0;
+//             }
+// #endif
+//             // if (caudal > 0.3)
+//             // {
+//             //     caudal -= 0.1;
+//             // }
+
+//             if (r_perc < 1 && b_perc > 0)
+//             {
+//                 r_perc += 0.1;
+//                 b_perc -= 0.1;
+//                 r = r_perc * 255;
+//                 b = b_perc * 255;
+//                 r_int = (uint32_t)(r);
+//                 b_int = (uint32_t)(b);
+//             }
+//         }
+//         else
+//         {
+//             B_Fria_Down = 1;
+//         }
+
+        // r_int = (uint32_t)(r * caudal);
+        // b_int = (uint32_t)(b * caudal);
 
 #ifndef VALV_MODUL
-    if (b_perc >= 0 && b_perc < 0.1)
-    {
-        EV4 = 1;
-        EV5 = 0;
-        EV6 = 0;
-        // gpio_set_level(Salida_EV4, 1);
-        // printf("Output_45=%d\n",gpio_get_level(Salida_EV4));
-    }
-    if (b_perc >= 0.1 && b_perc < 0.2)
-    {
-        EV4 = 0;
-        EV5 = 1;
-        EV6 = 0;
-    }
-    if (b_perc >= 0.2 && b_perc < 0.3)
-    {
-        EV4 = 1;
-        EV5 = 1;
-        EV6 = 0;
-    }
-    if (b_perc >= 0.3 && b_perc < 0.4)
-    {
-        EV4 = 0;
-        EV5 = 0;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.4 && b_perc < 0.5)
-    {
-        EV4 = 1;
-        EV5 = 0;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.5 && b_perc < 0.6)
-    {
-        EV4 = 0;
-        EV5 = 1;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.6 && b_perc < 0.7)
-    {
-        EV4 = 1;
-        EV5 = 1;
-        EV6 = 1;
-    }
+        if (b_perc >= 0 && b_perc < 0.1)
+        {
+            EV4 = 1;
+            EV5 = 0;
+            EV6 = 0;
+            // gpio_set_level(Salida_EV4, 1);
+            // printf("Output_45=%d\n",gpio_get_level(Salida_EV4));
+        }
+        if (b_perc >= 0.1 && b_perc < 0.2)
+        {
+            EV4 = 0;
+            EV5 = 1;
+            EV6 = 0;
+        }
+        if (b_perc >= 0.2 && b_perc < 0.3)
+        {
+            EV4 = 1;
+            EV5 = 1;
+            EV6 = 0;
+        }
+        if (b_perc >= 0.3 && b_perc < 0.4)
+        {
+            EV4 = 0;
+            EV5 = 0;
+            EV6 = 1;
+        }
+        if (b_perc >= 0.4 && b_perc < 0.5)
+        {
+            EV4 = 1;
+            EV5 = 0;
+            EV6 = 1;
+        }
+        if (b_perc >= 0.5 && b_perc < 0.6)
+        {
+            EV4 = 0;
+            EV5 = 1;
+            EV6 = 1;
+        }
+        if (b_perc >= 0.6 && b_perc < 0.7)
+        {
+            EV4 = 1;
+            EV5 = 1;
+            EV6 = 1;
+        }
 
 #endif
+    }
 }
 
 void adc_read(void)
@@ -1021,12 +1186,12 @@ void out_relay(void)
     gpio_set_level(Salida_EV6, EV6);
 #endif
     // gpio_set_level(Salida_Resistencia, !B_Resistencia);
-    // if (first_on && count_mot_off > 0)
-    // {
-    //     gpio_set_level(Salida_Fria_Down, 1);
-    //     gpio_set_level(Salida_Caliente_Down, 1);
-    //     count_mot_off--;
-    // }
+    if (first_on && count_mot_off > 0)
+    {
+        gpio_set_level(Salida_Fria_Down, 1);
+        gpio_set_level(Salida_Caliente_Down, 1);
+        count_mot_off--;
+    }
     // else
     // {
     //     first_on = 0;

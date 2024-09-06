@@ -2,7 +2,7 @@
   "C_Cpp.intelliSenseEngine": "default",
   "idf.adapterTargetName": "esp32s3",
   "idf.openOcdConfigs": [
-    "board/esp32s3-builtin.cfg"
+    "board/esp32s3-bridge.cfg"
   ],
   "idf.espIdfPathWin": "C:\\Users\\ADMIN\\esp\\esp-idf",
   "idf.pythonBinPathWin": "c:\\Matias\\Espressif\\python_env\\idf5.1_py3.11_env\\Scripts\\python.exe",

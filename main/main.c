@@ -127,7 +127,7 @@ bool EV6 = 0;
 
 #endif
 
-static uint8_t peer_mac[ESP_NOW_ETH_ALEN] = {0x68, 0xb6, 0xb3, 0x3c, 0xdb, 0x3c};
+static uint8_t peer_mac[ESP_NOW_ETH_ALEN] = {0x7c, 0xdf, 0xa1, 0x61, 0xb8, 0xf8};
 
 static touch_state_t touch_state = WAIT_FOR_TOUCH;
 
@@ -147,7 +147,7 @@ uint32_t b_int;
 
 led_strip_handle_t led_strip;
 
-static const char *TAG = "esp_now_resp";
+static const char *TAG = "esp_now";
 static const char *tag = "Main";
 static const char *tag2 = "UART";
 static const char *TAG3 = "esp_touch_INFO";
@@ -209,7 +209,7 @@ float caudal = 0.6;
 int interval = 100;
 int timerId = 1;
 int count_touch_read = 10;
-int calib_stage = CALIB_STAGE_3; // CAMBIAR POR CALIB_STAGE_1 DESPUES
+int calib_stage = CALIB_STAGE_1; // CAMBIAR POR CALIB_STAGE_1 DESPUES
 int level;
 uint32_t count_mot_off = 100;
 
@@ -274,8 +274,8 @@ int eval_touch_in()
     B_Fria_Down = 1;
     B_Fria_Up = 1; // Setea estas variables en los valores correspondientes a la no detección de toque
 
-    // if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.9) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
-    if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
+    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
+    //if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
     {
         touch_act_detect = 1;
         // printf("touch 1 detection\n");
@@ -283,8 +283,8 @@ int eval_touch_in()
         filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
     }
 
-    // if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.9) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down))
-    if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
+    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down))
+    //if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
     {
         touch_act_detect = 3;
         // printf("touch 3 detection\n");
@@ -557,6 +557,13 @@ static esp_err_t init_esp_now(void)
     esp_now_register_recv_cb(recv_cb);
     esp_now_register_send_cb(send_cb);
     esp_now_off = 0;
+    // Añade al peer
+    esp_now_peer_info_t peer_info = {};
+    memcpy(peer_info.peer_addr, peer_mac, 6);
+    peer_info.channel = 0;
+    peer_info.ifidx = ESP_IF_WIFI_STA;
+    peer_info.encrypt = false;
+    ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
     ESP_LOGI(TAG, "esp now init completed");
     return ESP_OK;
 }
@@ -572,10 +579,10 @@ void app_main()
 
     while (1)
     {
-        gpio_pin_proccess();
-        press_proccess();
+        //gpio_pin_proccess();
+        //press_proccess();
         valve_outputs();
-        // touch_read();
+        touch_read();
         //  donde esta first_on es la logica de encendido/apagado del equipo
         if (first_on) // apagado
         {
@@ -622,7 +629,7 @@ void inicio_hw(void)
 
     touch_pad_init();
     // touch_pad_set_voltage(TOUCH_HVOLT_2V4, TOUCH_LVOLT_0V8, TOUCH_HVOLT_ATTEN_1V5);
-    // touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5); // Chat GPT
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5); // Chat GPT
     touch_pad_config(Touch_Nivel);
     touch_pad_config(Touch_Fuga);
     touch_pad_config(Touch_Caudal_Sube);
@@ -701,16 +708,6 @@ void touch_read(void)
     touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up);
     touch_pad_read_raw_data(Touch_ON, &filtered_Touch_ON);
 
-#ifdef ESP_NOW
-    if (wifi_off && esp_now_off)
-    {
-        init_wifi();
-        init_esp_now();
-    }
-    esp_now_send(peer_mac, filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
-    esp_now_send(peer_mac, filtered_Caudal_Up, sizeof(filtered_Caudal_Up));    
-#endif
-
     if (calib_stage == CALIB_STAGE_3)
     {
         uint8_t cont_stuck = 0;
@@ -742,6 +739,32 @@ void touch_read(void)
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
             touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down_Ant);
             touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up_Ant);
+
+#ifdef ESP_NOW
+            if (wifi_off && esp_now_off)
+            {
+                init_wifi();
+                init_esp_now();
+            }
+            esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
+            if (send_result == ESP_OK)
+            {
+                ESP_LOGI(TAG, "Data send to peer MAC");
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Error al enviar datos: %s", esp_err_to_name(send_result));
+            }
+            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Up, sizeof(filtered_Caudal_Up));
+            if (send_result == ESP_OK)
+            {
+                ESP_LOGI(TAG, "Data send to peer MAC");
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Error al enviar datos: %s", esp_err_to_name(send_result));
+            }
+#endif
         }
     }
 

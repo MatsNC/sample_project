@@ -42,6 +42,13 @@
     "esp_log.h": "c",
     "ledc.h": "c",
     "esp_netif.h": "c",
-    "esp_timer.h": "c"
+    "esp_timer.h": "c",
+    "timers.h": "c",
+    "esp_now.h": "c",
+    "esp_event.h": "c",
+    "esp_mac.h": "c",
+    "nvs.h": "c",
+    "uart.h": "c",
+    "timer.h": "c"
   }
 }

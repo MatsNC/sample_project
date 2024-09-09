@@ -6,6 +6,9 @@
    branch barrido_entradas_pulso
    -Barrido de entradas usando while, arrays y switch case
    -Reset de los capacitivos cuando se quedan bloqueados (Se prueba reset de esp32 primero). EN PROCESO
+   -Se agrega guardado en memoria de calibracion. 
+   -Se agrega cambio con pulsador BOOT
+   -Se agregan modulos funcionales
 
 */
 #include <stdio.h>
@@ -30,6 +33,8 @@
 #include "led_strip.h"
 #include "driver/touch_sensor.h"
 #include "esp_timer.h"
+#include "nvs/nvs.h"
+#include "timer/timer.h"
 
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
@@ -44,6 +49,8 @@
 #else
 #define LED_STRIP 38
 #endif
+
+// #define ESP_NOW_LOG
 
 #define Touch_Nivel TOUCH_PAD_NUM4
 #define Touch_Fuga TOUCH_PAD_NUM5
@@ -97,6 +104,12 @@ typedef enum
     VALIDATE_PULSE,
 } touch_state_t;
 
+typedef enum
+{
+    TOUCH_PAD_ATTEN_VOLTAGE1,
+    TOUCH_PAD_ATTEN_VOLTAGE2,
+} touch_config_state_t;
+
 //-----------Definicion de variables----------------
 
 bool B_Fria_Up = 0;
@@ -130,6 +143,7 @@ bool EV6 = 0;
 static uint8_t peer_mac[ESP_NOW_ETH_ALEN] = {0x7c, 0xdf, 0xa1, 0x61, 0xb8, 0xf8};
 
 static touch_state_t touch_state = WAIT_FOR_TOUCH;
+static touch_config_state_t touch_config_state = TOUCH_PAD_ATTEN_VOLTAGE1;
 
 static int64_t touch_start_time = 0;
 static int64_t touch_duration = 0;
@@ -146,9 +160,9 @@ uint32_t r_int;
 uint32_t b_int;
 
 led_strip_handle_t led_strip;
+uint64_t period = 10 * 100000;
 
 static const char *TAG = "esp_now";
-static const char *tag = "Main";
 static const char *tag2 = "UART";
 static const char *TAG3 = "esp_touch_INFO";
 static const char *TAG_GPIO = "GPIO_STATE_INFO";
@@ -196,8 +210,8 @@ uint32_t filtered_Caudal_Up_Touch_toValidate;
 // valores de toque ya validados:
 uint32_t filtered_Nivel_Touch_Validated;
 uint32_t filtered_Fuga_Touch_Validated;
-uint32_t filtered_Caudal_Down_Touch_Validated;
-uint32_t filtered_Caudal_Up_Touch_Validated;
+uint32_t filtered_Caudal_Down_Touch_Validated = 0;
+uint32_t filtered_Caudal_Up_Touch_Validated = 0;
 
 //----------------------------------------------------------------
 
@@ -212,6 +226,9 @@ int count_touch_read = 10;
 int calib_stage = CALIB_STAGE_1; // CAMBIAR POR CALIB_STAGE_1 DESPUES
 int level;
 uint32_t count_mot_off = 100;
+
+uint32_t cal_filt_up_nvs;
+uint32_t cal_filt_dwn_nvs;
 
 TimeOut_t xTimeOut;
 TickType_t xTicksToWait;
@@ -248,7 +265,7 @@ void inicio_hw(void);
 static void init_uart(void);
 void touch_read(void);
 void adc_read(void);
-void set_timer(void);
+
 void set_pwm_duty(void);
 static void UART_task(void *pvParameters);
 void out_relay(void);
@@ -257,11 +274,6 @@ void press_proccess(void);
 
 //-----------------------------------------------------------------------------
 
-void vTimerCallback(TimerHandle_t pxTimer)
-{
-}
-
-// Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente:
 /**
  * @brief Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente
  * @param [in] void
@@ -274,8 +286,8 @@ int eval_touch_in()
     B_Fria_Down = 1;
     B_Fria_Up = 1; // Setea estas variables en los valores correspondientes a la no detección de toque
 
-    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
-    //if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
+    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up) && (filtered_Caudal_Down > 2.5 * filtered_Caudal_Down_Base))
+    // if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
     {
         touch_act_detect = 1;
         // printf("touch 1 detection\n");
@@ -283,8 +295,8 @@ int eval_touch_in()
         filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
     }
 
-    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down))
-    //if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
+    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down) && (filtered_Caudal_Up > 2.5 * filtered_Caudal_Up_Base))
+    // if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
     {
         touch_act_detect = 3;
         // printf("touch 3 detection\n");
@@ -334,7 +346,6 @@ static esp_err_t init_wifi(void)
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     esp_netif_init();
     esp_event_loop_create_default();
-    nvs_flash_init();
     esp_wifi_init(&wifi_init_config);
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_storage(WIFI_STORAGE_FLASH);
@@ -442,6 +453,7 @@ void gpio_pin_proccess(void)
         ESP_LOGI(TAG_GPIO, "IN: 0\n");
         once = 0;
         press_state = PRESSED;
+        set_timer(period);
     }
 }
 
@@ -509,6 +521,7 @@ void press_proccess(void)
 
 void send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
+#ifdef ESP_NOW_LOG
     if (status == ESP_NOW_SEND_SUCCESS)
     {
         ESP_LOGI(TAG, "ESP_NOW_SEND_SUCCESS");
@@ -517,6 +530,7 @@ void send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
     {
         ESP_LOGW(TAG, "ESP_NOW_SEND_FAIL");
     }
+#endif
 }
 
 void recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len)
@@ -572,15 +586,15 @@ void app_main()
 {
     inicio_hw();
     init_uart();
-    set_timer();
+    set_timer(period);
     ESP_ERROR_CHECK(init_wifi());
     ESP_ERROR_CHECK(init_esp_now());
     ESP_ERROR_CHECK(init_led_strip());
 
     while (1)
     {
-        //gpio_pin_proccess();
-        //press_proccess();
+        gpio_pin_proccess();
+        press_proccess();
         valve_outputs();
         touch_read();
         //  donde esta first_on es la logica de encendido/apagado del equipo
@@ -612,7 +626,7 @@ void inicio_hw(void)
 {
 
     gpio_config_t io_config;
-
+    ESP_ERROR_CHECK(init_nvs());
     io_config.mode = GPIO_MODE_OUTPUT;
     // io_config.pin_bit_mask = ((1 << Led_R) | (1 << Led_G) | (1 << Led_B) | (1 << Salida_Bomba) | (1 << Salida_Compresor) | (1 << Salida_Cooler) | (1 << Salida_Resistencia) | (1 <<Salida_Fria_Up) | (1 << Salida_Fria_Down) | (1 << Salida_Caliente_Up) | (1 << Salida_Caliente_Down));
     io_config.pin_bit_mask = ((1 << Salida_Bomba) | (1 << Salida_Compresor) | (1 << Salida_Cooler) | (1 << Salida_Resistencia) | (1 << Salida_Fria_Up) | (1 << Salida_Fria_Down) | (1 << Salida_Caliente_Up) | (1 << Salida_Caliente_Down) | (1 << Salida_Electrovalvula_CO2));
@@ -710,7 +724,7 @@ void touch_read(void)
 
     if (calib_stage == CALIB_STAGE_3)
     {
-        uint8_t cont_stuck = 0;
+        // uint8_t cont_stuck = 0;
         if (count_touch_read > 0)
         {
             count_touch_read--;
@@ -728,9 +742,11 @@ void touch_read(void)
             // }
             printf("------Nivel-------\n");
             printf("touch 1 = %ld\n ", filtered_Caudal_Down);
+            printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Base);
             printf("touch 1 th = %ld\n ", filtered_Caudal_Down_Touch_Validated);
             // printf("touch 2 = %ld\n ", filtered_Nivel);
             printf("touch 3 = %ld\n ", filtered_Caudal_Up);
+            printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Base);
             printf("touch 3 th = %ld\n ", filtered_Caudal_Up_Touch_Validated);
             // printf("touch 4 = %ld\n ", filtered_Fuga);
             // printf("touch on = %ld\n ", filtered_Touch_ON);
@@ -749,7 +765,7 @@ void touch_read(void)
             esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
             if (send_result == ESP_OK)
             {
-                ESP_LOGI(TAG, "Data send to peer MAC");
+                // ESP_LOGI(TAG, "Data send to peer MAC");
             }
             else
             {
@@ -758,7 +774,7 @@ void touch_read(void)
             send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Up, sizeof(filtered_Caudal_Up));
             if (send_result == ESP_OK)
             {
-                ESP_LOGI(TAG, "Data send to peer MAC");
+                // ESP_LOGI(TAG, "Data send to peer MAC");
             }
             else
             {
@@ -811,14 +827,14 @@ void touch_read(void)
         {
             filtered_Caudal_Down_Touch = filtered_Caudal_Down;
             filtered_Caudal_Down_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Down_Touch);
-            printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch);
+            printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch_Validated);
         }
 
         if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
         {
             filtered_Caudal_Up_Touch = filtered_Caudal_Up;
             filtered_Caudal_Up_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Up_Touch);
-            printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch);
+            printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch_Validated);
         }
 
         // vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -840,6 +856,12 @@ void touch_read(void)
                     ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 255, 0, 0));
                 }
                 led_strip_refresh(led_strip);
+                get_value_from_nvs("storage", "filtUp", &cal_filt_up_nvs);
+                get_value_from_nvs("storage", "filtDwn", &cal_filt_dwn_nvs);
+                filtered_Caudal_Up_Touch_Validated = cal_filt_up_nvs;
+                filtered_Caudal_Down_Touch_Validated = cal_filt_dwn_nvs;
+                ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
+                ESP_LOGI(TAG3, "Filtered Dwn: %ld\n", filtered_Caudal_Down_Touch_Validated);
             }
             else
             {
@@ -848,6 +870,14 @@ void touch_read(void)
                     ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 255, 0));
                 }
                 led_strip_refresh(led_strip);
+                if (save_value_to_nvs("storage", "filtUp", filtered_Caudal_Up_Touch_Validated) != ESP_OK)
+                {
+                    ESP_LOGE("NVS", "Error en guardado");
+                }
+                if (save_value_to_nvs("storage", "filtDwn", filtered_Caudal_Down_Touch_Validated) != ESP_OK)
+                {
+                    ESP_LOGE("NVS", "Error en guardado");
+                }
             }
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -1028,6 +1058,7 @@ void touch_read(void)
                         B_Fria_Up = 1;
                         printf("touch 3 rejected\n");
                         printf("touch 3 prev validated value: %ld\n", filtered_Caudal_Up_Touch_Validated);
+                        // ESP_ERROR_CHECK(save_value_to_nvs("storage", "filtered_Caudal_Up_Touch_Validated", filtered_Caudal_Up_Touch_Validated));
                     }
                 }
                 break;
@@ -1057,6 +1088,7 @@ void touch_read(void)
                 filtered_Caudal_Down_Touch_Validated = filtered_Caudal_Down_Touch_toValidate; // valido toque
                 printf("touch 1 validated\n");
                 printf("touch 1 validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
+                // ESP_ERROR_CHECK(save_value_to_nvs("storage", "filtered_Caudal_Down_Touch_Validated", filtered_Caudal_Down_Touch_Validated));
                 break;
 
             case 3:
@@ -1213,30 +1245,7 @@ void adc_read(void)
     Pres_Sal = 110 + prom_pres_sal * 0.795;
 }
 
-void set_timer(void)
-{
-    ESP_LOGI(tag, "Timer init configuration");
-    xTimers = xTimerCreate("Timer",                   // Just a text name, not used by the kernel.
-                           (pdMS_TO_TICKS(interval)), // The timer period in ticks.
-                           pdTRUE,                    // The timers will auto-reload themselves when they expire.
-                           (void *)timerId,           // Assign each timer a unique id equal to its array index.
-                           vTimerCallback             // Each timer calls the same callback when it expires.
-    );
 
-    if (xTimers == NULL)
-    {
-        // The timer was not created.
-        ESP_LOGE(tag, "The timer was not created.");
-    }
-    else
-    {
-        if (xTimerStart(xTimers, 0) != pdPASS)
-        {
-            // The timer could not be set into the Active state.
-            ESP_LOGE(tag, "The timer could not be set into the Active state.");
-        }
-    }
-}
 
 void set_pwm_duty(void)
 {

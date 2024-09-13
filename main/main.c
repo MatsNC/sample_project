@@ -570,13 +570,13 @@ void inicio_hw(void)
 }
 
 /**
- * @brief Funcion para definir e inicializar la tarea de I2C 
- * 
+ * @brief Funcion para definir e inicializar la tarea de I2C
+ *
  */
 
 static void i2c_task_func(void)
 {
-    
+    xTaskCreate(I2C_task, "i2c_task", TASK_MEMORY, NULL, 5, NULL);
 }
 
 static void init_uart(void)
@@ -1137,9 +1137,22 @@ void set_pwm_duty(void)
 
 static void I2C_task(void *pvParameters)
 {
-    while (1) 
-    {
+    i2c_master_init();
+    uint8_t data_to_send[] = {0x01, 0x02, 0x03}; // datos de prueba I2C
+    uint8_t data_received[3];
 
+    while (1)
+    {
+        esp_err_t ret = i2c_write_to_device(data_to_send, sizeof(data_to_send));
+        if (ret == ESP_OK)
+        {
+            ESP_LOGI(TAG_I2C, "Datos enviados correctamente");
+        }
+        ret = i2c_read_from_device(data_received, sizeof(data_received));
+        if (ret == ESP_OK)
+        {
+            ESP_LOGI(TAG_I2C, "Datos recibidos del PIC: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
+        }
     }
 }
 

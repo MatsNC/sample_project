@@ -6,14 +6,12 @@
    branch barrido_entradas_pulso
    -Barrido de entradas usando while, arrays y switch case
    -Reset de los capacitivos cuando se quedan bloqueados (Se prueba reset de esp32 primero). EN PROCESO
-   -Se agrega guardado en memoria de calibracion. 
+   -Se agrega guardado en memoria de calibracion.
    -Se agrega cambio con pulsador BOOT
    -Se agregan modulos funcionales
 
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
@@ -22,19 +20,15 @@
 #include "driver/uart.h"
 #include "esp_adc_cal.h"
 #include "driver/ledc.h"
-#include "esp_log.h"
 #include "freertos/timers.h"
-#include "esp_now.h"
-#include "esp_wifi.h"
-#include "esp_netif.h"
-#include "esp_mac.h"
-#include "esp_event.h"
 #include "nvs_flash.h"
 #include "led_strip.h"
 #include "driver/touch_sensor.h"
 #include "esp_timer.h"
 #include "nvs/nvs.h"
 #include "timer/timer.h"
+#include "wifi/wifi.h"
+#include "i2c/i2c.h"
 
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
@@ -49,8 +43,6 @@
 #else
 #define LED_STRIP 38
 #endif
-
-// #define ESP_NOW_LOG
 
 #define Touch_Nivel TOUCH_PAD_NUM4
 #define Touch_Fuga TOUCH_PAD_NUM5
@@ -89,8 +81,6 @@
 #define BUF_SIZE 1024
 #define TASK_MEMORY 1024 * 4
 
-#define ESP_NOW
-
 typedef enum
 {
     UNPRESSED,
@@ -121,8 +111,6 @@ bool B_Resistencia = 0;
 bool B_Compresor = 0;
 bool B_Cooler = 0;
 bool B_Electrovalvula_CO2 = 0;
-bool wifi_off = 1;
-bool esp_now_off = 1;
 bool first_on = 0; // cambiar por 1 despues
 bool init_calib_stage = false;
 bool once = 0;
@@ -139,8 +127,6 @@ bool EV5 = 0;
 bool EV6 = 0;
 
 #endif
-
-static uint8_t peer_mac[ESP_NOW_ETH_ALEN] = {0x7c, 0xdf, 0xa1, 0x61, 0xb8, 0xf8};
 
 static touch_state_t touch_state = WAIT_FOR_TOUCH;
 static touch_config_state_t touch_config_state = TOUCH_PAD_ATTEN_VOLTAGE1;
@@ -162,7 +148,6 @@ uint32_t b_int;
 led_strip_handle_t led_strip;
 uint64_t period = 10 * 100000;
 
-static const char *TAG = "esp_now";
 static const char *tag2 = "UART";
 static const char *TAG3 = "esp_touch_INFO";
 static const char *TAG_GPIO = "GPIO_STATE_INFO";
@@ -263,11 +248,13 @@ static esp_adc_cal_characteristics_t adc1_chars;
 //--------------------Prototipo de funciones--------------------------------
 void inicio_hw(void);
 static void init_uart(void);
+static void i2c_task_func(void);
 void touch_read(void);
 void adc_read(void);
 
 void set_pwm_duty(void);
 static void UART_task(void *pvParameters);
+static void I2C_task(void *pvParameters);
 void out_relay(void);
 int eval_touch_in(void);
 void press_proccess(void);
@@ -305,54 +292,6 @@ int eval_touch_in()
     }
 
     return touch_act_detect;
-}
-
-// Funciones de ESP_NOW y LED strip
-/**
- * @brief Funcion que apaga ESP_NOW
- * @param [in] void
- * @return void
- */
-
-void deinit_esp_now(void)
-{
-    esp_now_off = 1;
-    esp_now_deinit();
-    ESP_LOGI(TAG, "esp now deinit completed");
-}
-
-/**
- * @brief Funcion que apaga WIFI
- * @param [in] void
- * @return void
- */
-
-void deinit_wifi(void)
-{
-    wifi_off = 1;
-    esp_now_off = 1;
-    esp_wifi_stop();
-    ESP_LOGI(TAG, "wifi deinit completed");
-}
-
-/**
- * @brief Funcion que inicializa WIFI
- * @param [in] void
- * @return esp_err_t Estado de la operacion (ESP_OK si todo fue bien, ESP_FAIL si hubo algun problema)
- */
-
-static esp_err_t init_wifi(void)
-{
-    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    esp_netif_init();
-    esp_event_loop_create_default();
-    esp_wifi_init(&wifi_init_config);
-    esp_wifi_set_mode(WIFI_MODE_STA);
-    esp_wifi_set_storage(WIFI_STORAGE_FLASH);
-    esp_wifi_start();
-    wifi_off = 0;
-    ESP_LOGI(TAG, "wifi init completed");
-    return ESP_OK;
 }
 
 // COMENTAR CON DOXYGEN
@@ -519,69 +458,6 @@ void press_proccess(void)
     }
 }
 
-void send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
-{
-#ifdef ESP_NOW_LOG
-    if (status == ESP_NOW_SEND_SUCCESS)
-    {
-        ESP_LOGI(TAG, "ESP_NOW_SEND_SUCCESS");
-    }
-    else
-    {
-        ESP_LOGW(TAG, "ESP_NOW_SEND_FAIL");
-    }
-#endif
-}
-
-void recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len)
-{
-    uint8_t out_type;
-    out_type = atoi((char *)data);
-    ESP_LOGI(TAG, "Data received: " MACSTR " %s", MAC2STR(esp_now_info->src_addr), data);
-    printf("%d\n", out_type);
-    switch (out_type)
-    {
-    case 0:
-        B_Caliente_Up = 1;
-        B_Fria_Down = 0;
-        B_Fria_Up = 0;
-        B_Caliente_Down = 0;
-        printf("Agua Natural\n");
-        break;
-    case 1:
-        B_Fria_Up = 1;
-        B_Fria_Down = 0;
-        B_Caliente_Down = 0;
-        B_Caliente_Up = 0;
-        printf("Agua Fria\n");
-        break;
-    case 2:
-        B_Caliente_Down = 1;
-        B_Fria_Down = 0;
-        B_Fria_Up = 0;
-        B_Caliente_Up = 0;
-        printf("Agua Gasificada\n");
-        break;
-    }
-}
-
-static esp_err_t init_esp_now(void)
-{
-    esp_now_init();
-    esp_now_register_recv_cb(recv_cb);
-    esp_now_register_send_cb(send_cb);
-    esp_now_off = 0;
-    // Añade al peer
-    esp_now_peer_info_t peer_info = {};
-    memcpy(peer_info.peer_addr, peer_mac, 6);
-    peer_info.channel = 0;
-    peer_info.ifidx = ESP_IF_WIFI_STA;
-    peer_info.encrypt = false;
-    ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
-    ESP_LOGI(TAG, "esp now init completed");
-    return ESP_OK;
-}
-
 void app_main()
 {
     inicio_hw();
@@ -693,6 +569,16 @@ void inicio_hw(void)
     // printf("inicio_hw\n");
 }
 
+/**
+ * @brief Funcion para definir e inicializar la tarea de I2C 
+ * 
+ */
+
+static void i2c_task_func(void)
+{
+    
+}
+
 static void init_uart(void)
 {
     uart_config_t uart_config = {
@@ -757,11 +643,11 @@ void touch_read(void)
             touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up_Ant);
 
 #ifdef ESP_NOW
-            if (wifi_off && esp_now_off)
-            {
-                init_wifi();
-                init_esp_now();
-            }
+            // if (wifi_off && esp_now_off)
+            // {
+            //     init_wifi();
+            //     init_esp_now();
+            // }
             esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
             if (send_result == ESP_OK)
             {
@@ -769,7 +655,7 @@ void touch_read(void)
             }
             else
             {
-                ESP_LOGE(TAG, "Error al enviar datos: %s", esp_err_to_name(send_result));
+                ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
             }
             send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Up, sizeof(filtered_Caudal_Up));
             if (send_result == ESP_OK)
@@ -778,7 +664,7 @@ void touch_read(void)
             }
             else
             {
-                ESP_LOGE(TAG, "Error al enviar datos: %s", esp_err_to_name(send_result));
+                ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
             }
 #endif
         }
@@ -1245,10 +1131,16 @@ void adc_read(void)
     Pres_Sal = 110 + prom_pres_sal * 0.795;
 }
 
-
-
 void set_pwm_duty(void)
 {
+}
+
+static void I2C_task(void *pvParameters)
+{
+    while (1) 
+    {
+
+    }
 }
 
 static void UART_task(void *pvParameters)

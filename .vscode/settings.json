@@ -49,6 +49,10 @@
     "esp_mac.h": "c",
     "nvs.h": "c",
     "uart.h": "c",
-    "timer.h": "c"
+    "timer.h": "c",
+    "esp_adc_cal.h": "c",
+    "wifi.h": "c",
+    "stdio.h": "c",
+    "i2c.h": "c"
   }
 }

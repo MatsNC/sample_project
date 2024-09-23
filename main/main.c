@@ -49,7 +49,7 @@
 #define Touch_Caudal_Sube TOUCH_PAD_NUM1
 #define Touch_Caudal_Baja TOUCH_PAD_NUM2
 #define Touch_ON TOUCH_PAD_NUM7
-#define adc_caliente ADC1_CHANNEL_7
+// #define adc_caliente ADC1_CHANNEL_7
 #define adc_fria ADC1_CHANNEL_5
 #define adc_natural ADC1_CHANNEL_6
 #define adc_pres_ent ADC1_CHANNEL_3
@@ -466,6 +466,8 @@ void app_main()
     ESP_ERROR_CHECK(init_wifi());
     ESP_ERROR_CHECK(init_esp_now());
     ESP_ERROR_CHECK(init_led_strip());
+    ESP_ERROR_CHECK(i2c_master_init());
+    i2c_task_func();
 
     while (1)
     {
@@ -560,7 +562,7 @@ void inicio_hw(void)
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_DEFAULT, 0, &adc1_chars);
 
     adc1_config_width(ADC_WIDTH_BIT_DEFAULT);
-    adc1_config_channel_atten(adc_caliente, ADC_ATTEN_DB_11);
+    // adc1_config_channel_atten(adc_caliente, ADC_ATTEN_DB_11);
     adc1_config_channel_atten(adc_fria, ADC_ATTEN_DB_11);
     adc1_config_channel_atten(adc_natural, ADC_ATTEN_DB_11);
     adc1_config_channel_atten(adc_pres_ent, ADC_ATTEN_DB_11);
@@ -1090,7 +1092,7 @@ void adc_read(void)
 {
     for (int i = 0; i < Samples; i++)
     {
-        prom_caliente += adc1_get_raw(adc_caliente);
+        // prom_caliente += adc1_get_raw(adc_caliente);
         prom_fria += adc1_get_raw(adc_fria);
         prom_natural += adc1_get_raw(adc_natural);
         prom_pres_ent += adc1_get_raw(adc_pres_ent);
@@ -1137,22 +1139,22 @@ void set_pwm_duty(void)
 
 static void I2C_task(void *pvParameters)
 {
-    i2c_master_init();
     uint8_t data_to_send[] = {0x01, 0x02, 0x03}; // datos de prueba I2C
     uint8_t data_received[3];
-
     while (1)
     {
-        esp_err_t ret = i2c_write_to_device(data_to_send, sizeof(data_to_send));
+        esp_err_t ret = i2c_master_write_slave(data_to_send, sizeof(data_to_send));
         if (ret == ESP_OK)
         {
             ESP_LOGI(TAG_I2C, "Datos enviados correctamente");
         }
-        ret = i2c_read_from_device(data_received, sizeof(data_received));
+        memset(data_received, 0, sizeof(data_received));
+        ret = i2c_master_read_slave(data_received, sizeof(data_received));
         if (ret == ESP_OK)
         {
-            ESP_LOGI(TAG_I2C, "Datos recibidos del PIC: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
+            ESP_LOGI(TAG_I2C, "Datos recibidos del esclavo: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
         }
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay 1 segundo
     }
 }
 

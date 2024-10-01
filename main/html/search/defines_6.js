@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['salida_5fbomba_0',['Salida_Bomba',['../main_8c.html#ac831f75fa19acbd940a72d949f8338bf',1,'main.c']]],
+  ['salida_5fcaliente_5fdown_1',['Salida_Caliente_Down',['../main_8c.html#ab577cc3a3f3b2b1d6c7859971aabd153',1,'main.c']]],
+  ['salida_5fcaliente_5fup_2',['Salida_Caliente_Up',['../main_8c.html#afbecb1134f897c4a0c27f42eb69cb5e2',1,'main.c']]],
+  ['salida_5fcompresor_3',['Salida_Compresor',['../main_8c.html#a922c5db5c0742d18711d20ac38fa4462',1,'main.c']]],
+  ['salida_5fcooler_4',['Salida_Cooler',['../main_8c.html#a929d470ef0b1042458e28393709cdb7d',1,'main.c']]],
+  ['salida_5felectrovalvula_5fco2_5',['Salida_Electrovalvula_CO2',['../main_8c.html#a94ecadaff84fea9fc08979c82937254c',1,'main.c']]],
+  ['salida_5fev1_6',['Salida_EV1',['../main_8c.html#a67f1d1d4f67a1c745e329d98380ca1a3',1,'main.c']]],
+  ['salida_5fev2_7',['Salida_EV2',['../main_8c.html#a3e45a441066b8726db315cbf6fdf1533',1,'main.c']]],
+  ['salida_5fev3_8',['Salida_EV3',['../main_8c.html#a94c330c55f9e20a5aa2222017898b362',1,'main.c']]],
+  ['salida_5fev4_9',['Salida_EV4',['../main_8c.html#a28549aec8aef3509f7787370097aab08',1,'main.c']]],
+  ['salida_5fev5_10',['Salida_EV5',['../main_8c.html#a704e23e37ef53e2be3e9d3c02c564b9b',1,'main.c']]],
+  ['salida_5fev6_11',['Salida_EV6',['../main_8c.html#ada0e615e8429fa8afeb381e683e5ef09',1,'main.c']]],
+  ['salida_5ffria_5fdown_12',['Salida_Fria_Down',['../main_8c.html#a5d01a8aafc5d33decf0b368645fd50e5',1,'main.c']]],
+  ['salida_5ffria_5fup_13',['Salida_Fria_Up',['../main_8c.html#af723b2bc4840fc42dee6a5bee8a7b3e8',1,'main.c']]],
+  ['salida_5fresistencia_14',['Salida_Resistencia',['../main_8c.html#a5403a88329b97e9940af2b6e3f426c15',1,'main.c']]],
+  ['samples_15',['Samples',['../main_8c.html#aaa094e47ef8f4d287df8fe3c056448dc',1,'main.c']]]
+];

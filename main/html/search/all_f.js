@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['tag2_0',['tag2',['../main_8c.html#af4c3d36452cbb1d427ba3e7f8a628646',1,'main.c']]],
+  ['tag3_1',['TAG3',['../main_8c.html#a61fc6209a48e9414bc6f6dff41c34f09',1,'main.c']]],
+  ['tag_5fgpio_2',['TAG_GPIO',['../main_8c.html#a8e90da439cb56787a8a907f51232a376',1,'main.c']]],
+  ['task_5fmemory_3',['TASK_MEMORY',['../main_8c.html#afb0dda7d617e2076f8ea7d0fc28984e2',1,'main.c']]],
+  ['timerid_4',['timerId',['../main_8c.html#a394764048e58be1487318f7ed4961168',1,'main.c']]],
+  ['touch_5fact_5fdetect_5',['touch_act_detect',['../main_8c.html#affd73c47171ef667337a37714233750f',1,'main.c']]],
+  ['touch_5fcaudal_5fbaja_6',['Touch_Caudal_Baja',['../main_8c.html#a55fd6a6f72cd059c14e0f025dc36cad9',1,'main.c']]],
+  ['touch_5fcaudal_5fsube_7',['Touch_Caudal_Sube',['../main_8c.html#a99ed49087e6dfd3eae5402f477c2a102',1,'main.c']]],
+  ['touch_5fconfig_5fstate_8',['touch_config_state',['../main_8c.html#a59932cabfeb926a1a161250e28e339c2',1,'main.c']]],
+  ['touch_5fconfig_5fstate_5ft_9',['touch_config_state_t',['../main_8c.html#a9366a723c1a62aa1c7f4c2ddb38dd285',1,'main.c']]],
+  ['touch_5fdetected_10',['TOUCH_DETECTED',['../main_8c.html#af0a1d1114ba348ba72086b6ab31b2240a02c1342fefe2f6aa7c5988e24162c15a',1,'main.c']]],
+  ['touch_5fduration_11',['touch_duration',['../main_8c.html#ab8dbcfd03e4b9f4f4f030cdee94b9b78',1,'main.c']]],
+  ['touch_5ffuga_12',['Touch_Fuga',['../main_8c.html#abdb02819e953ccacaf0e71a16140eff4',1,'main.c']]],
+  ['touch_5fnivel_13',['Touch_Nivel',['../main_8c.html#a06e55141cb16a9631bdbf200af771047',1,'main.c']]],
+  ['touch_5fon_14',['Touch_ON',['../main_8c.html#a565b26ef5ebe7a2d4ec07bb6ea65a618',1,'main.c']]],
+  ['touch_5fpad_5fatten_5fvoltage1_15',['TOUCH_PAD_ATTEN_VOLTAGE1',['../main_8c.html#a9366a723c1a62aa1c7f4c2ddb38dd285a872d2750623fd1ee602d265c3388aafe',1,'main.c']]],
+  ['touch_5fpad_5fatten_5fvoltage2_16',['TOUCH_PAD_ATTEN_VOLTAGE2',['../main_8c.html#a9366a723c1a62aa1c7f4c2ddb38dd285a6c5ae94665d0615696f0f56493ed7f39',1,'main.c']]],
+  ['touch_5fread_17',['touch_read',['../main_8c.html#ad01d7faf784088d8933a7e88d0a614a3',1,'main.c']]],
+  ['touch_5fstart_5ftime_18',['touch_start_time',['../main_8c.html#acfd99aae3beb69902cc61ada048db85a',1,'main.c']]],
+  ['touch_5fstate_19',['touch_state',['../main_8c.html#ae3491da34c6141c6811d109bc775dc75',1,'main.c']]],
+  ['touch_5fstate_5ft_20',['touch_state_t',['../main_8c.html#af0a1d1114ba348ba72086b6ab31b2240',1,'main.c']]]
+];

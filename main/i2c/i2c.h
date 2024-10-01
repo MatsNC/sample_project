@@ -22,12 +22,18 @@
 #define ACK_CHECK_DIS 0x0           /*!< I2C master will not check ack from slave */
 #define ACK_VAL 0x0                 /*!< I2C ack value */
 #define NACK_VAL 0x1                /*!< I2C nack value */
+#define DATA_LENGTH 3               // Tamaño de datos a enviar para slave
 
 static const char *TAG_I2C = "I2C_MASTER";
 static const char *TAG_I2C_SLV = "I2C_SLAVE";
+static uint8_t slave_data[DATA_LENGTH]; // Buffer de datos del esclavo
 
 esp_err_t i2c_master_init(void);
 esp_err_t i2c_master_write_slave(uint8_t *, size_t);
 esp_err_t i2c_master_read_slave(uint8_t *, size_t);
+static esp_err_t i2c_slave_init(void);
+static void i2c_slave_read_task(void *);
+static void i2c_slave_write_task(void *);
+void i2c_slave_task_start(void);
 
 #endif // I2C_H

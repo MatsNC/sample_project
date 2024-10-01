@@ -1,4 +1,5 @@
-/* branch v1.1
+/**
+ * @brief branch v1.1
    -Se agrega:
    -Apagado/Encendido del equipo con entrada capacitiva (distinta a los volantes). OK.
    -Detección de toque por pulso (si está entre 50 y 1000mS). Si detecta toque setea el umbral. Caso contrario no (bloqueo por agua).
@@ -9,8 +10,8 @@
    -Se agrega guardado en memoria de calibracion.
    -Se agrega cambio con pulsador BOOT
    -Se agregan modulos funcionales
-
-*/
+ * 
+ */
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -1139,7 +1140,7 @@ void set_pwm_duty(void)
 
 static void I2C_task(void *pvParameters)
 {
-    uint8_t data_to_send[] = {0x01, 0x02, 0x03}; // datos de prueba I2C
+    uint8_t data_to_send[] = {0xAA, 0xBB, 0xCC}; // datos de prueba I2C
     uint8_t data_received[3];
     while (1)
     {
@@ -1152,7 +1153,7 @@ static void I2C_task(void *pvParameters)
         ret = i2c_master_read_slave(data_received, sizeof(data_received));
         if (ret == ESP_OK)
         {
-            ESP_LOGI(TAG_I2C, "Datos recibidos del esclavo: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
+            //ESP_LOGI(TAG_I2C, "Datos recibidos del esclavo: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay 1 segundo
     }

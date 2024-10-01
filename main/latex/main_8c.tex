@@ -1,0 +1,1338 @@
+\doxysection{main.\+c File Reference}
+\hypertarget{main_8c}{}\label{main_8c}\index{main.c@{main.c}}
+{\ttfamily \#include "{}freertos/\+Free\+RTOS.\+h"{}}\newline
+{\ttfamily \#include "{}freertos/task.\+h"{}}\newline
+{\ttfamily \#include "{}driver/gpio.\+h"{}}\newline
+{\ttfamily \#include "{}driver/touch\+\_\+pad.\+h"{}}\newline
+{\ttfamily \#include "{}driver/adc.\+h"{}}\newline
+{\ttfamily \#include "{}driver/uart.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+adc\+\_\+cal.\+h"{}}\newline
+{\ttfamily \#include "{}driver/ledc.\+h"{}}\newline
+{\ttfamily \#include "{}freertos/timers.\+h"{}}\newline
+{\ttfamily \#include "{}nvs\+\_\+flash.\+h"{}}\newline
+{\ttfamily \#include "{}led\+\_\+strip.\+h"{}}\newline
+{\ttfamily \#include "{}driver/touch\+\_\+sensor.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+timer.\+h"{}}\newline
+{\ttfamily \#include "{}nvs/nvs.\+h"{}}\newline
+{\ttfamily \#include "{}timer/timer.\+h"{}}\newline
+{\ttfamily \#include "{}wifi/wifi.\+h"{}}\newline
+{\ttfamily \#include "{}i2c/i2c.\+h"{}}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{main_8c_ace4b2a90ab0c513d10416dd52bffe438}{ESP\+\_\+\+CHANNEL}}~1
+\begin{DoxyCompactList}\small\item\em branch v1.\+1 -\/Se agrega\+: -\/Apagado/\+Encendido del equipo con entrada capacitiva (distinta a los volantes). \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{main_8c_a84f3fa7795519fb2452340aff9c124d4}{LED\+\_\+\+STRIP\+\_\+\+MAX\+\_\+\+LEDS}}~12
+\item 
+\#define \mbox{\hyperlink{main_8c_a5462a9ac17f992f72630d3bd50e1abe8}{CALIB\+\_\+\+STAGE\+\_\+1}}~1
+\item 
+\#define \mbox{\hyperlink{main_8c_a3a524bc1e955d9ab8b0a81c65679f340}{CALIB\+\_\+\+STAGE\+\_\+2}}~2
+\item 
+\#define \mbox{\hyperlink{main_8c_a13c596cc53c0833696431896502f517c}{CALIB\+\_\+\+STAGE\+\_\+3}}~3
+\item 
+\#define \mbox{\hyperlink{main_8c_ab8c1fc2e74f4b61c6e152f2ae9844a65}{LED\+\_\+\+STRIP}}~38
+\item 
+\#define \mbox{\hyperlink{main_8c_a06e55141cb16a9631bdbf200af771047}{Touch\+\_\+\+Nivel}}~TOUCH\+\_\+\+PAD\+\_\+\+NUM4
+\item 
+\#define \mbox{\hyperlink{main_8c_abdb02819e953ccacaf0e71a16140eff4}{Touch\+\_\+\+Fuga}}~TOUCH\+\_\+\+PAD\+\_\+\+NUM5
+\item 
+\#define \mbox{\hyperlink{main_8c_a99ed49087e6dfd3eae5402f477c2a102}{Touch\+\_\+\+Caudal\+\_\+\+Sube}}~TOUCH\+\_\+\+PAD\+\_\+\+NUM1
+\item 
+\#define \mbox{\hyperlink{main_8c_a55fd6a6f72cd059c14e0f025dc36cad9}{Touch\+\_\+\+Caudal\+\_\+\+Baja}}~TOUCH\+\_\+\+PAD\+\_\+\+NUM2
+\item 
+\#define \mbox{\hyperlink{main_8c_a565b26ef5ebe7a2d4ec07bb6ea65a618}{Touch\+\_\+\+ON}}~TOUCH\+\_\+\+PAD\+\_\+\+NUM7
+\item 
+\#define \mbox{\hyperlink{main_8c_a5ef6bc8592d19ecaa6ffe5e9151ec29d}{adc\+\_\+fria}}~ADC1\+\_\+\+CHANNEL\+\_\+5
+\item 
+\#define \mbox{\hyperlink{main_8c_a2ac72f8f231e05c115dc09547b5311eb}{adc\+\_\+natural}}~ADC1\+\_\+\+CHANNEL\+\_\+6
+\item 
+\#define \mbox{\hyperlink{main_8c_a9b9a7e92bc3a46810eababc91e05b141}{adc\+\_\+pres\+\_\+ent}}~ADC1\+\_\+\+CHANNEL\+\_\+3
+\item 
+\#define \mbox{\hyperlink{main_8c_a4fafc8daa9e0922224feec977cb92173}{adc\+\_\+pres\+\_\+sal}}~ADC1\+\_\+\+CHANNEL\+\_\+4
+\item 
+\#define \mbox{\hyperlink{main_8c_ac831f75fa19acbd940a72d949f8338bf}{Salida\+\_\+\+Bomba}}~10
+\item 
+\#define \mbox{\hyperlink{main_8c_a922c5db5c0742d18711d20ac38fa4462}{Salida\+\_\+\+Compresor}}~16
+\item 
+\#define \mbox{\hyperlink{main_8c_a929d470ef0b1042458e28393709cdb7d}{Salida\+\_\+\+Cooler}}~9
+\item 
+\#define \mbox{\hyperlink{main_8c_a5403a88329b97e9940af2b6e3f426c15}{Salida\+\_\+\+Resistencia}}~15
+\item 
+\#define \mbox{\hyperlink{main_8c_aff50e04f4467fb9c5b259e2ee6f21464}{PIN\+\_\+\+SWITCH}}~0
+\item 
+\#define \mbox{\hyperlink{main_8c_a67f1d1d4f67a1c745e329d98380ca1a3}{Salida\+\_\+\+EV1}}~37
+\item 
+\#define \mbox{\hyperlink{main_8c_a3e45a441066b8726db315cbf6fdf1533}{Salida\+\_\+\+EV2}}~36
+\item 
+\#define \mbox{\hyperlink{main_8c_a94c330c55f9e20a5aa2222017898b362}{Salida\+\_\+\+EV3}}~35
+\item 
+\#define \mbox{\hyperlink{main_8c_a28549aec8aef3509f7787370097aab08}{Salida\+\_\+\+EV4}}~45
+\item 
+\#define \mbox{\hyperlink{main_8c_a704e23e37ef53e2be3e9d3c02c564b9b}{Salida\+\_\+\+EV5}}~48
+\item 
+\#define \mbox{\hyperlink{main_8c_ada0e615e8429fa8afeb381e683e5ef09}{Salida\+\_\+\+EV6}}~47
+\item 
+\#define \mbox{\hyperlink{main_8c_af723b2bc4840fc42dee6a5bee8a7b3e8}{Salida\+\_\+\+Fria\+\_\+\+Up}}~11
+\item 
+\#define \mbox{\hyperlink{main_8c_a5d01a8aafc5d33decf0b368645fd50e5}{Salida\+\_\+\+Fria\+\_\+\+Down}}~12
+\item 
+\#define \mbox{\hyperlink{main_8c_afbecb1134f897c4a0c27f42eb69cb5e2}{Salida\+\_\+\+Caliente\+\_\+\+Up}}~13
+\item 
+\#define \mbox{\hyperlink{main_8c_ab577cc3a3f3b2b1d6c7859971aabd153}{Salida\+\_\+\+Caliente\+\_\+\+Down}}~14
+\item 
+\#define \mbox{\hyperlink{main_8c_a94ecadaff84fea9fc08979c82937254c}{Salida\+\_\+\+Electrovalvula\+\_\+\+CO2}}~21
+\item 
+\#define \mbox{\hyperlink{main_8c_aaa094e47ef8f4d287df8fe3c056448dc}{Samples}}~64
+\item 
+\#define \mbox{\hyperlink{main_8c_a49dcd593bb4dd55620e7c08581f8e2ad}{UART\+\_\+\+NUM}}~UART\+\_\+\+NUM\+\_\+1
+\item 
+\#define \mbox{\hyperlink{main_8c_a6821bafc3c88dfb2e433a095df9940c6}{BUF\+\_\+\+SIZE}}~1024
+\item 
+\#define \mbox{\hyperlink{main_8c_afb0dda7d617e2076f8ea7d0fc28984e2}{TASK\+\_\+\+MEMORY}}~1024 \texorpdfstring{$\ast$}{*} 4
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6}{gpio\+\_\+state\+\_\+t}} \{ \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a1c92f09b92fd12d05b2821f19d7e8e15}{UNPRESSED}}
+, \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a5ef9a100ac8b4b8d6dec477c377b7901}{PRESSED}}
+ \}
+\item 
+enum \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240}{touch\+\_\+state\+\_\+t}} \{ \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240a03ee751cbd8b497a04c9cdb8c6a7f49b}{WAIT\+\_\+\+FOR\+\_\+\+TOUCH}}
+, \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240a02c1342fefe2f6aa7c5988e24162c15a}{TOUCH\+\_\+\+DETECTED}}
+, \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240a508f05fd0eca41e4d9aefdb1d1635a20}{VALIDATE\+\_\+\+PULSE}}
+ \}
+\item 
+enum \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285}{touch\+\_\+config\+\_\+state\+\_\+t}} \{ \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a872d2750623fd1ee602d265c3388aafe}{TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE1}}
+, \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a6c5ae94665d0615696f0f56493ed7f39}{TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE2}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{main_8c_af344410eb9d780d502adb1954d4be54a}{inicio\+\_\+hw}} (void)
+\item 
+static void \mbox{\hyperlink{main_8c_a768b0718ac3959aa2f70355fd97ce16d}{init\+\_\+uart}} (void)
+\item 
+static void \mbox{\hyperlink{main_8c_a189e21a4686fe361ba0fc884b05ada20}{i2c\+\_\+task\+\_\+func}} (void)
+\begin{DoxyCompactList}\small\item\em Funcion para definir e inicializar la tarea de I2C. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_ad01d7faf784088d8933a7e88d0a614a3}{touch\+\_\+read}} (void)
+\item 
+void \mbox{\hyperlink{main_8c_a65504ca3fda64dfdeb0cd41a9ac5835f}{adc\+\_\+read}} (void)
+\item 
+void \mbox{\hyperlink{main_8c_a4f2e99edbf0b589a8622aac0f8c6a42e}{set\+\_\+pwm\+\_\+duty}} (void)
+\item 
+static void \mbox{\hyperlink{main_8c_a3d6bce98e9e733dd2cc08c2d3f9bab6c}{UART\+\_\+task}} (void \texorpdfstring{$\ast$}{*}pv\+Parameters)
+\item 
+static void \mbox{\hyperlink{main_8c_a9b1b023489c2d2ad6951cc4908d29a76}{I2\+C\+\_\+task}} (void \texorpdfstring{$\ast$}{*}pv\+Parameters)
+\item 
+void \mbox{\hyperlink{main_8c_af362463259552c8f38927606087eb30d}{out\+\_\+relay}} (void)
+\item 
+int \mbox{\hyperlink{main_8c_a881c4a972c96524ac4713151aa7c4b03}{eval\+\_\+touch\+\_\+in}} ()
+\begin{DoxyCompactList}\small\item\em Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_a37424074ab92473cb316db758f313ce3}{press\+\_\+proccess}} (void)
+\begin{DoxyCompactList}\small\item\em Manejo de estados de la pulsación de botón BOOT. \end{DoxyCompactList}\item 
+static esp\+\_\+err\+\_\+t \mbox{\hyperlink{main_8c_a3b1a6f271e795ca21ad8060b69452ade}{init\+\_\+led\+\_\+strip}} (void)
+\item 
+void \mbox{\hyperlink{main_8c_ac7cc93cd8a1e3947808a86c61c47142b}{valve\+\_\+outputs}} (void)
+\item 
+void \mbox{\hyperlink{main_8c_acefa02f57bf1170d5cf87cbdfc637426}{gpio\+\_\+pin\+\_\+proccess}} (void)
+\begin{DoxyCompactList}\small\item\em Manejo de pulsación de botón BOOT. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_abce06be17fc37d675118a678a8100a36}{app\+\_\+main}} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{main_8c_afdc6abdbe04643803734ce27b9b9a439}{B\+\_\+\+Fria\+\_\+\+Up}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a003611c9f1238288ce8d37bf82add008}{B\+\_\+\+Fria\+\_\+\+Down}} = 1
+\item 
+bool \mbox{\hyperlink{main_8c_a72be9242d303cab76531adb80816e09a}{B\+\_\+\+Caliente\+\_\+\+Up}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_afbff6d94979ebda3756d1bf22d49f18d}{B\+\_\+\+Caliente\+\_\+\+Down}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_acc8a154312b88e7101f35a0e4ab2c8c6}{B\+\_\+\+Bomba}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_ab9d825764b9668103d966c578839786c}{B\+\_\+\+Resistencia}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_ae2564bef16747b9aee8e563b298670d1}{B\+\_\+\+Compresor}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_ad26b777c3b1b05b249c1b70cba9d8a54}{B\+\_\+\+Cooler}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a313ac8f4292dfa385f4e8f2fb2553239}{B\+\_\+\+Electrovalvula\+\_\+\+CO2}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a7d4f17eca22ae283a2ee953a6bca33de}{first\+\_\+on}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_ab024beac6ad42bdde6178513057c3faf}{init\+\_\+calib\+\_\+stage}} = false
+\item 
+bool \mbox{\hyperlink{main_8c_ad88994ce17a3f0a9c5b862cc4636f54f}{once}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a384ae2f533c957cef99b67609e211492}{set\+\_\+dir}} = 1
+\item 
+\mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6}{gpio\+\_\+state\+\_\+t}} \mbox{\hyperlink{main_8c_a292a0d2c83d75b1078328c4423f0b00b}{press\+\_\+state}} = \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a1c92f09b92fd12d05b2821f19d7e8e15}{UNPRESSED}}
+\item 
+bool \mbox{\hyperlink{main_8c_a9a01ab79e7f86e08092abc34a739cf55}{EV1}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_af085116ebb9445a49615ab7e6b8cf6d9}{EV2}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a2727b905115817ed1bed788415bffb60}{EV3}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a1230c434905efdcce36a36cb9252a283}{EV4}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a51336de3350133c28585d361c551779c}{EV5}} = 0
+\item 
+bool \mbox{\hyperlink{main_8c_a9cfc9b9096ef422d15462a89b34d58ee}{EV6}} = 0
+\item 
+static \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240}{touch\+\_\+state\+\_\+t}} \mbox{\hyperlink{main_8c_ae3491da34c6141c6811d109bc775dc75}{touch\+\_\+state}} = \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240a03ee751cbd8b497a04c9cdb8c6a7f49b}{WAIT\+\_\+\+FOR\+\_\+\+TOUCH}}
+\item 
+static \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285}{touch\+\_\+config\+\_\+state\+\_\+t}} \mbox{\hyperlink{main_8c_a59932cabfeb926a1a161250e28e339c2}{touch\+\_\+config\+\_\+state}} = \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a872d2750623fd1ee602d265c3388aafe}{TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE1}}
+\item 
+static int64\+\_\+t \mbox{\hyperlink{main_8c_acfd99aae3beb69902cc61ada048db85a}{touch\+\_\+start\+\_\+time}} = 0
+\item 
+static int64\+\_\+t \mbox{\hyperlink{main_8c_ab8dbcfd03e4b9f4f4f030cdee94b9b78}{touch\+\_\+duration}} = 0
+\item 
+static const int64\+\_\+t \mbox{\hyperlink{main_8c_abe6aef46e4f943ddbdd8b0244a87cc86}{MIN\+\_\+\+PULSE\+\_\+\+DURATION\+\_\+\+MS}} = 50
+\item 
+static const int64\+\_\+t \mbox{\hyperlink{main_8c_a75a8a10fdb017b33ceedc533d14a2355}{MAX\+\_\+\+PULSE\+\_\+\+DURATION\+\_\+\+MS}} = 1000
+\item 
+float \mbox{\hyperlink{main_8c_aa9af0db62be4cbe1ecb32b159ea9d084}{b\+\_\+perc}} = 0.\+5
+\item 
+float \mbox{\hyperlink{main_8c_a7d9fd33b0227140f24319c5fbee8dc55}{r\+\_\+perc}} = 0.\+5
+\item 
+float \mbox{\hyperlink{main_8c_a4788d82c901b9367dd5c0daff8a7616b}{r}} = 255 \texorpdfstring{$\ast$}{*} 0.\+5
+\item 
+float \mbox{\hyperlink{main_8c_a83fc1af92e29717b4513d121b0c72c7d}{b}} = 255 \texorpdfstring{$\ast$}{*} 0.\+5
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a64df39150b62d3f2221366ffa513a566}{r\+\_\+int}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a7bf6776449aca4196db7fb65ba3ee0f9}{b\+\_\+int}}
+\item 
+led\+\_\+strip\+\_\+handle\+\_\+t \mbox{\hyperlink{main_8c_abbc5a11f432a69a8fc4d2798e9302d6f}{led\+\_\+strip}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{main_8c_a473ee3fcea196f6207eeda1e747746e8}{period}} = 10 \texorpdfstring{$\ast$}{*} 100000
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{main_8c_af4c3d36452cbb1d427ba3e7f8a628646}{tag2}} = "{}UART"{}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{main_8c_a61fc6209a48e9414bc6f6dff41c34f09}{TAG3}} = "{}esp\+\_\+touch\+\_\+\+INFO"{}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{main_8c_a8e90da439cb56787a8a907f51232a376}{TAG\+\_\+\+GPIO}} = "{}GPIO\+\_\+\+STATE\+\_\+\+INFO"{}
+\item 
+Timer\+Handle\+\_\+t \mbox{\hyperlink{main_8c_ae19f314539bcae5fa20c0cdd58dddaf7}{x\+Timers}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a439f46fc14cf82aa990bc86a8d5022ff}{filtered\+\_\+\+Nivel}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a3c0c5d407310f82053875a3096391913}{filtered\+\_\+\+Fuga}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a3341cafaf09b2d8804dd4e6e6f99af9f}{filtered\+\_\+\+Caudal\+\_\+\+Up}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a224be0a54a05c0313c05af69a8fe40ed}{filtered\+\_\+\+Caudal\+\_\+\+Down}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a9453b6b5a9c6a4b087630eb2154b27f5}{filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Base}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_aa5a789cd5bfc97d6a3b6e88196310ce0}{filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Base}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a14b3d1e4303a64d54c78d42c91ed8932}{filtered\+\_\+\+Nivel\+\_\+\+Base}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_ab37453c5a0893c95c4e4e8bdccb97e8d}{filtered\+\_\+\+Fuga\+\_\+\+Base}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a575da98ad4d6d7cb45535ecdaa3eda59}{filtered\+\_\+\+Touch\+\_\+\+ON\+\_\+\+Base}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a650ba321e5b1db1cbf10614505a55084}{filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a871af545218b097979546f63bb3c8c6d}{filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_ad127fe8596475e8452b6c41773b32f5c}{filtered\+\_\+\+Nivel\+\_\+\+Base\+\_\+\+Touch}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a01677cfdc26b35f8f7d1051869664dc0}{filtered\+\_\+\+Fuga\+\_\+\+Base\+\_\+\+Touch}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a2454d6f86d995f57330d7474830cb62c}{filtered\+\_\+\+Touch\+\_\+\+ON}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a7c6e02e22fc3e9eb8477a90b60822b35}{filtered\+\_\+\+Nivel\+\_\+\+Ant}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_aeacf863ec27cfa87abb2ef53d8442930}{filtered\+\_\+\+Fuga\+\_\+\+Ant}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a16c9d442e067a309319f63c427a0674c}{filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Ant}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a1559f144038e967695f622d6f5d75d6a}{filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Ant}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a4db5d7962859d3a1e1831384644313d2}{filtered\+\_\+\+Nivel\+\_\+\+Touch\+\_\+to\+Validate}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a91f0f7d10132107668ef5a3bf1018a2b}{filtered\+\_\+\+Fuga\+\_\+\+Touch\+\_\+to\+Validate}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_aecf0f29588d42848f3a217770e8e8d96}{filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch\+\_\+to\+Validate}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a8f06fc663badcb7af2cd312c0000d884}{filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch\+\_\+to\+Validate}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_ad01f4b7f5ffeaf5468871e294034df69}{filtered\+\_\+\+Nivel\+\_\+\+Touch\+\_\+\+Validated}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a1112d46eaf310f9811679c443ff4d28b}{filtered\+\_\+\+Fuga\+\_\+\+Touch\+\_\+\+Validated}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_ad5334e0407c2bbd4bf41fd722c3d2c7e}{filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch\+\_\+\+Validated}} = 0
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a85c88741e7553a1836631b0a82515b35}{filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch\+\_\+\+Validated}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_a7e27fe0e33db5d576988041493bab938}{calib}} = 100
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8c_a4f71f8fd68931175372117ed7113687a}{on\+\_\+off\+\_\+debounce}} = 20
+\item 
+float \mbox{\hyperlink{main_8c_a7a096f24ea0ce7703acf9c010b141655}{caudal}} = 0.\+6
+\item 
+int \mbox{\hyperlink{main_8c_ae0c690118932b32ef40a74bb6a259acd}{interval}} = 100
+\item 
+int \mbox{\hyperlink{main_8c_a394764048e58be1487318f7ed4961168}{timer\+Id}} = 1
+\item 
+int \mbox{\hyperlink{main_8c_a5982ed8a6b77a7b1ba0e846b77941773}{count\+\_\+touch\+\_\+read}} = 10
+\item 
+int \mbox{\hyperlink{main_8c_a42f775836df3974be8a437b9839064ed}{calib\+\_\+stage}} = \mbox{\hyperlink{main_8c_a5462a9ac17f992f72630d3bd50e1abe8}{CALIB\+\_\+\+STAGE\+\_\+1}}
+\item 
+int \mbox{\hyperlink{main_8c_acf4d33ee4cff36f69b924471174dcb11}{level}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a57d9667250ae776c25b4a95f55d9f500}{count\+\_\+mot\+\_\+off}} = 100
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a94c821e6be59925e19c8f8b8c5cf5131}{cal\+\_\+filt\+\_\+up\+\_\+nvs}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{main_8c_a6e2d0a8b86c8b5dad71a0271be39995b}{cal\+\_\+filt\+\_\+dwn\+\_\+nvs}}
+\item 
+Time\+Out\+\_\+t \mbox{\hyperlink{main_8c_adfd18783eb98aaf63e580d49c9e17057}{x\+Time\+Out}}
+\item 
+Tick\+Type\+\_\+t \mbox{\hyperlink{main_8c_aa3252ed844031a7e654fc011f38118e4}{x\+Ticks\+To\+Wait}}
+\item 
+Tick\+Type\+\_\+t \mbox{\hyperlink{main_8c_a6a94f0282dad791016eae311c6470ea6}{x\+Initial\+Timeout}} = pd\+MS\+\_\+\+TO\+\_\+\+TICKS(3000)
+\item 
+Time\+Out\+\_\+t \mbox{\hyperlink{main_8c_a1c90e67595f5d41f51d5c836bd353228}{x\+Time\+Out2}}
+\item 
+Tick\+Type\+\_\+t \mbox{\hyperlink{main_8c_ad13eace1a428b3b89e8124738a5cc596}{x\+Ticks\+To\+Wait2}}
+\item 
+Tick\+Type\+\_\+t \mbox{\hyperlink{main_8c_abed12e61e38e416f3fb7bb0efc4f67d8}{x\+Initial\+Timeout2}} = pd\+MS\+\_\+\+TO\+\_\+\+TICKS(1000)
+\item 
+int \mbox{\hyperlink{main_8c_a2c6a3fb7cddd9bd7254692264962b5b3}{contador}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_a31028451a8154078fd04834a01335ecf}{demora}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_accc1a6be27be811c0e918c5ff073d70c}{prom\+\_\+caliente}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_adbbc23cd2d77b08a925ffe74b253ff52}{prom\+\_\+fria}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_ad62f924ca44825e5a0804382e8b1fd53}{prom\+\_\+natural}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_a926882fff33ac746393cb315db8ceb59}{prom\+\_\+pres\+\_\+ent}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_a737d50f00edb06eeab8334ba26e6cbc7}{prom\+\_\+pres\+\_\+sal}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_affd73c47171ef667337a37714233750f}{touch\+\_\+act\+\_\+detect}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_a7782aec3b2c89efea6a3a16432380a0f}{pag}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_ad43c3812e6d13e0518d9f8b8f463ffcf}{count}} = 0
+\item 
+int \mbox{\hyperlink{main_8c_ad0a0c97c38d3abca18c30142506581af}{cont\+\_\+pin\+\_\+pressed}} = 5
+\item 
+float \mbox{\hyperlink{main_8c_aff7324753961122feb938f7d6118d0aa}{Caliente}}
+\item 
+float \mbox{\hyperlink{main_8c_a424c7bdbe87a784a7a9b850704b18af9}{Fria}}
+\item 
+float \mbox{\hyperlink{main_8c_a68089df8c9ffdda964b884c86a73378d}{Natural}}
+\item 
+float \mbox{\hyperlink{main_8c_a332e8c3e95ad18bedc044b676eb639a0}{Pres\+\_\+\+Ent}}
+\item 
+float \mbox{\hyperlink{main_8c_a226afd075ec53e7b21d297a7e4b360f7}{Pres\+\_\+\+Sal}}
+\item 
+static esp\+\_\+adc\+\_\+cal\+\_\+characteristics\+\_\+t \mbox{\hyperlink{main_8c_a8fad2ab5c7e2add7ca0a5aa441872762}{adc1\+\_\+chars}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{main_8c_a5ef6bc8592d19ecaa6ffe5e9151ec29d}\index{main.c@{main.c}!adc\_fria@{adc\_fria}}
+\index{adc\_fria@{adc\_fria}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc\_fria}{adc\_fria}}
+{\footnotesize\ttfamily \label{main_8c_a5ef6bc8592d19ecaa6ffe5e9151ec29d} 
+\#define adc\+\_\+fria~ADC1\+\_\+\+CHANNEL\+\_\+5}
+
+\Hypertarget{main_8c_a2ac72f8f231e05c115dc09547b5311eb}\index{main.c@{main.c}!adc\_natural@{adc\_natural}}
+\index{adc\_natural@{adc\_natural}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc\_natural}{adc\_natural}}
+{\footnotesize\ttfamily \label{main_8c_a2ac72f8f231e05c115dc09547b5311eb} 
+\#define adc\+\_\+natural~ADC1\+\_\+\+CHANNEL\+\_\+6}
+
+\Hypertarget{main_8c_a9b9a7e92bc3a46810eababc91e05b141}\index{main.c@{main.c}!adc\_pres\_ent@{adc\_pres\_ent}}
+\index{adc\_pres\_ent@{adc\_pres\_ent}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc\_pres\_ent}{adc\_pres\_ent}}
+{\footnotesize\ttfamily \label{main_8c_a9b9a7e92bc3a46810eababc91e05b141} 
+\#define adc\+\_\+pres\+\_\+ent~ADC1\+\_\+\+CHANNEL\+\_\+3}
+
+\Hypertarget{main_8c_a4fafc8daa9e0922224feec977cb92173}\index{main.c@{main.c}!adc\_pres\_sal@{adc\_pres\_sal}}
+\index{adc\_pres\_sal@{adc\_pres\_sal}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc\_pres\_sal}{adc\_pres\_sal}}
+{\footnotesize\ttfamily \label{main_8c_a4fafc8daa9e0922224feec977cb92173} 
+\#define adc\+\_\+pres\+\_\+sal~ADC1\+\_\+\+CHANNEL\+\_\+4}
+
+\Hypertarget{main_8c_a6821bafc3c88dfb2e433a095df9940c6}\index{main.c@{main.c}!BUF\_SIZE@{BUF\_SIZE}}
+\index{BUF\_SIZE@{BUF\_SIZE}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{BUF\_SIZE}{BUF\_SIZE}}
+{\footnotesize\ttfamily \label{main_8c_a6821bafc3c88dfb2e433a095df9940c6} 
+\#define BUF\+\_\+\+SIZE~1024}
+
+\Hypertarget{main_8c_a5462a9ac17f992f72630d3bd50e1abe8}\index{main.c@{main.c}!CALIB\_STAGE\_1@{CALIB\_STAGE\_1}}
+\index{CALIB\_STAGE\_1@{CALIB\_STAGE\_1}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{CALIB\_STAGE\_1}{CALIB\_STAGE\_1}}
+{\footnotesize\ttfamily \label{main_8c_a5462a9ac17f992f72630d3bd50e1abe8} 
+\#define CALIB\+\_\+\+STAGE\+\_\+1~1}
+
+\Hypertarget{main_8c_a3a524bc1e955d9ab8b0a81c65679f340}\index{main.c@{main.c}!CALIB\_STAGE\_2@{CALIB\_STAGE\_2}}
+\index{CALIB\_STAGE\_2@{CALIB\_STAGE\_2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{CALIB\_STAGE\_2}{CALIB\_STAGE\_2}}
+{\footnotesize\ttfamily \label{main_8c_a3a524bc1e955d9ab8b0a81c65679f340} 
+\#define CALIB\+\_\+\+STAGE\+\_\+2~2}
+
+\Hypertarget{main_8c_a13c596cc53c0833696431896502f517c}\index{main.c@{main.c}!CALIB\_STAGE\_3@{CALIB\_STAGE\_3}}
+\index{CALIB\_STAGE\_3@{CALIB\_STAGE\_3}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{CALIB\_STAGE\_3}{CALIB\_STAGE\_3}}
+{\footnotesize\ttfamily \label{main_8c_a13c596cc53c0833696431896502f517c} 
+\#define CALIB\+\_\+\+STAGE\+\_\+3~3}
+
+\Hypertarget{main_8c_ace4b2a90ab0c513d10416dd52bffe438}\index{main.c@{main.c}!ESP\_CHANNEL@{ESP\_CHANNEL}}
+\index{ESP\_CHANNEL@{ESP\_CHANNEL}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{ESP\_CHANNEL}{ESP\_CHANNEL}}
+{\footnotesize\ttfamily \label{main_8c_ace4b2a90ab0c513d10416dd52bffe438} 
+\#define ESP\+\_\+\+CHANNEL~1}
+
+
+
+branch v1.\+1 -\/Se agrega\+: -\/Apagado/\+Encendido del equipo con entrada capacitiva (distinta a los volantes). 
+
+OK. -\/Detección de toque por pulso (si está entre 50 y 1000mS). Si detecta toque setea el umbral. Caso contrario no (bloqueo por agua).
+
+branch barrido\+\_\+entradas\+\_\+pulso -\/Barrido de entradas usando while, arrays y switch case -\/Reset de los capacitivos cuando se quedan bloqueados (Se prueba reset de esp32 primero). EN PROCESO -\/Se agrega guardado en memoria de calibracion. -\/Se agrega cambio con pulsador BOOT -\/Se agregan modulos funcionales \Hypertarget{main_8c_ab8c1fc2e74f4b61c6e152f2ae9844a65}\index{main.c@{main.c}!LED\_STRIP@{LED\_STRIP}}
+\index{LED\_STRIP@{LED\_STRIP}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{LED\_STRIP}{LED\_STRIP}}
+{\footnotesize\ttfamily \label{main_8c_ab8c1fc2e74f4b61c6e152f2ae9844a65} 
+\#define LED\+\_\+\+STRIP~38}
+
+\Hypertarget{main_8c_a84f3fa7795519fb2452340aff9c124d4}\index{main.c@{main.c}!LED\_STRIP\_MAX\_LEDS@{LED\_STRIP\_MAX\_LEDS}}
+\index{LED\_STRIP\_MAX\_LEDS@{LED\_STRIP\_MAX\_LEDS}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{LED\_STRIP\_MAX\_LEDS}{LED\_STRIP\_MAX\_LEDS}}
+{\footnotesize\ttfamily \label{main_8c_a84f3fa7795519fb2452340aff9c124d4} 
+\#define LED\+\_\+\+STRIP\+\_\+\+MAX\+\_\+\+LEDS~12}
+
+\Hypertarget{main_8c_aff50e04f4467fb9c5b259e2ee6f21464}\index{main.c@{main.c}!PIN\_SWITCH@{PIN\_SWITCH}}
+\index{PIN\_SWITCH@{PIN\_SWITCH}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{PIN\_SWITCH}{PIN\_SWITCH}}
+{\footnotesize\ttfamily \label{main_8c_aff50e04f4467fb9c5b259e2ee6f21464} 
+\#define PIN\+\_\+\+SWITCH~0}
+
+\Hypertarget{main_8c_ac831f75fa19acbd940a72d949f8338bf}\index{main.c@{main.c}!Salida\_Bomba@{Salida\_Bomba}}
+\index{Salida\_Bomba@{Salida\_Bomba}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Bomba}{Salida\_Bomba}}
+{\footnotesize\ttfamily \label{main_8c_ac831f75fa19acbd940a72d949f8338bf} 
+\#define Salida\+\_\+\+Bomba~10}
+
+\Hypertarget{main_8c_ab577cc3a3f3b2b1d6c7859971aabd153}\index{main.c@{main.c}!Salida\_Caliente\_Down@{Salida\_Caliente\_Down}}
+\index{Salida\_Caliente\_Down@{Salida\_Caliente\_Down}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Caliente\_Down}{Salida\_Caliente\_Down}}
+{\footnotesize\ttfamily \label{main_8c_ab577cc3a3f3b2b1d6c7859971aabd153} 
+\#define Salida\+\_\+\+Caliente\+\_\+\+Down~14}
+
+\Hypertarget{main_8c_afbecb1134f897c4a0c27f42eb69cb5e2}\index{main.c@{main.c}!Salida\_Caliente\_Up@{Salida\_Caliente\_Up}}
+\index{Salida\_Caliente\_Up@{Salida\_Caliente\_Up}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Caliente\_Up}{Salida\_Caliente\_Up}}
+{\footnotesize\ttfamily \label{main_8c_afbecb1134f897c4a0c27f42eb69cb5e2} 
+\#define Salida\+\_\+\+Caliente\+\_\+\+Up~13}
+
+\Hypertarget{main_8c_a922c5db5c0742d18711d20ac38fa4462}\index{main.c@{main.c}!Salida\_Compresor@{Salida\_Compresor}}
+\index{Salida\_Compresor@{Salida\_Compresor}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Compresor}{Salida\_Compresor}}
+{\footnotesize\ttfamily \label{main_8c_a922c5db5c0742d18711d20ac38fa4462} 
+\#define Salida\+\_\+\+Compresor~16}
+
+\Hypertarget{main_8c_a929d470ef0b1042458e28393709cdb7d}\index{main.c@{main.c}!Salida\_Cooler@{Salida\_Cooler}}
+\index{Salida\_Cooler@{Salida\_Cooler}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Cooler}{Salida\_Cooler}}
+{\footnotesize\ttfamily \label{main_8c_a929d470ef0b1042458e28393709cdb7d} 
+\#define Salida\+\_\+\+Cooler~9}
+
+\Hypertarget{main_8c_a94ecadaff84fea9fc08979c82937254c}\index{main.c@{main.c}!Salida\_Electrovalvula\_CO2@{Salida\_Electrovalvula\_CO2}}
+\index{Salida\_Electrovalvula\_CO2@{Salida\_Electrovalvula\_CO2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Electrovalvula\_CO2}{Salida\_Electrovalvula\_CO2}}
+{\footnotesize\ttfamily \label{main_8c_a94ecadaff84fea9fc08979c82937254c} 
+\#define Salida\+\_\+\+Electrovalvula\+\_\+\+CO2~21}
+
+\Hypertarget{main_8c_a67f1d1d4f67a1c745e329d98380ca1a3}\index{main.c@{main.c}!Salida\_EV1@{Salida\_EV1}}
+\index{Salida\_EV1@{Salida\_EV1}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV1}{Salida\_EV1}}
+{\footnotesize\ttfamily \label{main_8c_a67f1d1d4f67a1c745e329d98380ca1a3} 
+\#define Salida\+\_\+\+EV1~37}
+
+\Hypertarget{main_8c_a3e45a441066b8726db315cbf6fdf1533}\index{main.c@{main.c}!Salida\_EV2@{Salida\_EV2}}
+\index{Salida\_EV2@{Salida\_EV2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV2}{Salida\_EV2}}
+{\footnotesize\ttfamily \label{main_8c_a3e45a441066b8726db315cbf6fdf1533} 
+\#define Salida\+\_\+\+EV2~36}
+
+\Hypertarget{main_8c_a94c330c55f9e20a5aa2222017898b362}\index{main.c@{main.c}!Salida\_EV3@{Salida\_EV3}}
+\index{Salida\_EV3@{Salida\_EV3}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV3}{Salida\_EV3}}
+{\footnotesize\ttfamily \label{main_8c_a94c330c55f9e20a5aa2222017898b362} 
+\#define Salida\+\_\+\+EV3~35}
+
+\Hypertarget{main_8c_a28549aec8aef3509f7787370097aab08}\index{main.c@{main.c}!Salida\_EV4@{Salida\_EV4}}
+\index{Salida\_EV4@{Salida\_EV4}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV4}{Salida\_EV4}}
+{\footnotesize\ttfamily \label{main_8c_a28549aec8aef3509f7787370097aab08} 
+\#define Salida\+\_\+\+EV4~45}
+
+\Hypertarget{main_8c_a704e23e37ef53e2be3e9d3c02c564b9b}\index{main.c@{main.c}!Salida\_EV5@{Salida\_EV5}}
+\index{Salida\_EV5@{Salida\_EV5}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV5}{Salida\_EV5}}
+{\footnotesize\ttfamily \label{main_8c_a704e23e37ef53e2be3e9d3c02c564b9b} 
+\#define Salida\+\_\+\+EV5~48}
+
+\Hypertarget{main_8c_ada0e615e8429fa8afeb381e683e5ef09}\index{main.c@{main.c}!Salida\_EV6@{Salida\_EV6}}
+\index{Salida\_EV6@{Salida\_EV6}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_EV6}{Salida\_EV6}}
+{\footnotesize\ttfamily \label{main_8c_ada0e615e8429fa8afeb381e683e5ef09} 
+\#define Salida\+\_\+\+EV6~47}
+
+\Hypertarget{main_8c_a5d01a8aafc5d33decf0b368645fd50e5}\index{main.c@{main.c}!Salida\_Fria\_Down@{Salida\_Fria\_Down}}
+\index{Salida\_Fria\_Down@{Salida\_Fria\_Down}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Fria\_Down}{Salida\_Fria\_Down}}
+{\footnotesize\ttfamily \label{main_8c_a5d01a8aafc5d33decf0b368645fd50e5} 
+\#define Salida\+\_\+\+Fria\+\_\+\+Down~12}
+
+\Hypertarget{main_8c_af723b2bc4840fc42dee6a5bee8a7b3e8}\index{main.c@{main.c}!Salida\_Fria\_Up@{Salida\_Fria\_Up}}
+\index{Salida\_Fria\_Up@{Salida\_Fria\_Up}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Fria\_Up}{Salida\_Fria\_Up}}
+{\footnotesize\ttfamily \label{main_8c_af723b2bc4840fc42dee6a5bee8a7b3e8} 
+\#define Salida\+\_\+\+Fria\+\_\+\+Up~11}
+
+\Hypertarget{main_8c_a5403a88329b97e9940af2b6e3f426c15}\index{main.c@{main.c}!Salida\_Resistencia@{Salida\_Resistencia}}
+\index{Salida\_Resistencia@{Salida\_Resistencia}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Salida\_Resistencia}{Salida\_Resistencia}}
+{\footnotesize\ttfamily \label{main_8c_a5403a88329b97e9940af2b6e3f426c15} 
+\#define Salida\+\_\+\+Resistencia~15}
+
+\Hypertarget{main_8c_aaa094e47ef8f4d287df8fe3c056448dc}\index{main.c@{main.c}!Samples@{Samples}}
+\index{Samples@{Samples}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Samples}{Samples}}
+{\footnotesize\ttfamily \label{main_8c_aaa094e47ef8f4d287df8fe3c056448dc} 
+\#define Samples~64}
+
+\Hypertarget{main_8c_afb0dda7d617e2076f8ea7d0fc28984e2}\index{main.c@{main.c}!TASK\_MEMORY@{TASK\_MEMORY}}
+\index{TASK\_MEMORY@{TASK\_MEMORY}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{TASK\_MEMORY}{TASK\_MEMORY}}
+{\footnotesize\ttfamily \label{main_8c_afb0dda7d617e2076f8ea7d0fc28984e2} 
+\#define TASK\+\_\+\+MEMORY~1024 \texorpdfstring{$\ast$}{*} 4}
+
+\Hypertarget{main_8c_a55fd6a6f72cd059c14e0f025dc36cad9}\index{main.c@{main.c}!Touch\_Caudal\_Baja@{Touch\_Caudal\_Baja}}
+\index{Touch\_Caudal\_Baja@{Touch\_Caudal\_Baja}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Touch\_Caudal\_Baja}{Touch\_Caudal\_Baja}}
+{\footnotesize\ttfamily \label{main_8c_a55fd6a6f72cd059c14e0f025dc36cad9} 
+\#define Touch\+\_\+\+Caudal\+\_\+\+Baja~TOUCH\+\_\+\+PAD\+\_\+\+NUM2}
+
+\Hypertarget{main_8c_a99ed49087e6dfd3eae5402f477c2a102}\index{main.c@{main.c}!Touch\_Caudal\_Sube@{Touch\_Caudal\_Sube}}
+\index{Touch\_Caudal\_Sube@{Touch\_Caudal\_Sube}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Touch\_Caudal\_Sube}{Touch\_Caudal\_Sube}}
+{\footnotesize\ttfamily \label{main_8c_a99ed49087e6dfd3eae5402f477c2a102} 
+\#define Touch\+\_\+\+Caudal\+\_\+\+Sube~TOUCH\+\_\+\+PAD\+\_\+\+NUM1}
+
+\Hypertarget{main_8c_abdb02819e953ccacaf0e71a16140eff4}\index{main.c@{main.c}!Touch\_Fuga@{Touch\_Fuga}}
+\index{Touch\_Fuga@{Touch\_Fuga}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Touch\_Fuga}{Touch\_Fuga}}
+{\footnotesize\ttfamily \label{main_8c_abdb02819e953ccacaf0e71a16140eff4} 
+\#define Touch\+\_\+\+Fuga~TOUCH\+\_\+\+PAD\+\_\+\+NUM5}
+
+\Hypertarget{main_8c_a06e55141cb16a9631bdbf200af771047}\index{main.c@{main.c}!Touch\_Nivel@{Touch\_Nivel}}
+\index{Touch\_Nivel@{Touch\_Nivel}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Touch\_Nivel}{Touch\_Nivel}}
+{\footnotesize\ttfamily \label{main_8c_a06e55141cb16a9631bdbf200af771047} 
+\#define Touch\+\_\+\+Nivel~TOUCH\+\_\+\+PAD\+\_\+\+NUM4}
+
+\Hypertarget{main_8c_a565b26ef5ebe7a2d4ec07bb6ea65a618}\index{main.c@{main.c}!Touch\_ON@{Touch\_ON}}
+\index{Touch\_ON@{Touch\_ON}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Touch\_ON}{Touch\_ON}}
+{\footnotesize\ttfamily \label{main_8c_a565b26ef5ebe7a2d4ec07bb6ea65a618} 
+\#define Touch\+\_\+\+ON~TOUCH\+\_\+\+PAD\+\_\+\+NUM7}
+
+\Hypertarget{main_8c_a49dcd593bb4dd55620e7c08581f8e2ad}\index{main.c@{main.c}!UART\_NUM@{UART\_NUM}}
+\index{UART\_NUM@{UART\_NUM}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{UART\_NUM}{UART\_NUM}}
+{\footnotesize\ttfamily \label{main_8c_a49dcd593bb4dd55620e7c08581f8e2ad} 
+\#define UART\+\_\+\+NUM~UART\+\_\+\+NUM\+\_\+1}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\Hypertarget{main_8c_a2ff5468d5ab752db6fa1fb95363392a6}\index{main.c@{main.c}!gpio\_state\_t@{gpio\_state\_t}}
+\index{gpio\_state\_t@{gpio\_state\_t}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{gpio\_state\_t}{gpio\_state\_t}}
+{\footnotesize\ttfamily \label{main_8c_a2ff5468d5ab752db6fa1fb95363392a6} 
+enum \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6}{gpio\+\_\+state\+\_\+t}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UNPRESSED@{UNPRESSED}!main.c@{main.c}}\index{main.c@{main.c}!UNPRESSED@{UNPRESSED}}}\Hypertarget{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a1c92f09b92fd12d05b2821f19d7e8e15}\label{main_8c_a2ff5468d5ab752db6fa1fb95363392a6} 
+UNPRESSED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESSED@{PRESSED}!main.c@{main.c}}\index{main.c@{main.c}!PRESSED@{PRESSED}}}\Hypertarget{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a5ef9a100ac8b4b8d6dec477c377b7901}\label{main_8c_a2ff5468d5ab752db6fa1fb95363392a6} 
+PRESSED&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285}\index{main.c@{main.c}!touch\_config\_state\_t@{touch\_config\_state\_t}}
+\index{touch\_config\_state\_t@{touch\_config\_state\_t}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_config\_state\_t}{touch\_config\_state\_t}}
+{\footnotesize\ttfamily \label{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285} 
+enum \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285}{touch\+\_\+config\+\_\+state\+\_\+t}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TOUCH\_PAD\_ATTEN\_VOLTAGE1@{TOUCH\_PAD\_ATTEN\_VOLTAGE1}!main.c@{main.c}}\index{main.c@{main.c}!TOUCH\_PAD\_ATTEN\_VOLTAGE1@{TOUCH\_PAD\_ATTEN\_VOLTAGE1}}}\Hypertarget{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a872d2750623fd1ee602d265c3388aafe}\label{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285} 
+TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE1&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TOUCH\_PAD\_ATTEN\_VOLTAGE2@{TOUCH\_PAD\_ATTEN\_VOLTAGE2}!main.c@{main.c}}\index{main.c@{main.c}!TOUCH\_PAD\_ATTEN\_VOLTAGE2@{TOUCH\_PAD\_ATTEN\_VOLTAGE2}}}\Hypertarget{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a6c5ae94665d0615696f0f56493ed7f39}\label{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285} 
+TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE2&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{main_8c_af0a1d1114ba348ba72086b6ab31b2240}\index{main.c@{main.c}!touch\_state\_t@{touch\_state\_t}}
+\index{touch\_state\_t@{touch\_state\_t}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_state\_t}{touch\_state\_t}}
+{\footnotesize\ttfamily \label{main_8c_af0a1d1114ba348ba72086b6ab31b2240} 
+enum \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240}{touch\+\_\+state\+\_\+t}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WAIT\_FOR\_TOUCH@{WAIT\_FOR\_TOUCH}!main.c@{main.c}}\index{main.c@{main.c}!WAIT\_FOR\_TOUCH@{WAIT\_FOR\_TOUCH}}}\Hypertarget{main_8c_af0a1d1114ba348ba72086b6ab31b2240a03ee751cbd8b497a04c9cdb8c6a7f49b}\label{main_8c_af0a1d1114ba348ba72086b6ab31b2240} 
+WAIT\+\_\+\+FOR\+\_\+\+TOUCH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TOUCH\_DETECTED@{TOUCH\_DETECTED}!main.c@{main.c}}\index{main.c@{main.c}!TOUCH\_DETECTED@{TOUCH\_DETECTED}}}\Hypertarget{main_8c_af0a1d1114ba348ba72086b6ab31b2240a02c1342fefe2f6aa7c5988e24162c15a}\label{main_8c_af0a1d1114ba348ba72086b6ab31b2240} 
+TOUCH\+\_\+\+DETECTED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VALIDATE\_PULSE@{VALIDATE\_PULSE}!main.c@{main.c}}\index{main.c@{main.c}!VALIDATE\_PULSE@{VALIDATE\_PULSE}}}\Hypertarget{main_8c_af0a1d1114ba348ba72086b6ab31b2240a508f05fd0eca41e4d9aefdb1d1635a20}\label{main_8c_af0a1d1114ba348ba72086b6ab31b2240} 
+VALIDATE\+\_\+\+PULSE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{main_8c_a65504ca3fda64dfdeb0cd41a9ac5835f}\index{main.c@{main.c}!adc\_read@{adc\_read}}
+\index{adc\_read@{adc\_read}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc\_read()}{adc\_read()}}
+{\footnotesize\ttfamily \label{main_8c_a65504ca3fda64dfdeb0cd41a9ac5835f} 
+void adc\+\_\+read (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_abce06be17fc37d675118a678a8100a36}\index{main.c@{main.c}!app\_main@{app\_main}}
+\index{app\_main@{app\_main}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{app\_main()}{app\_main()}}
+{\footnotesize\ttfamily \label{main_8c_abce06be17fc37d675118a678a8100a36} 
+void app\+\_\+main (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_a881c4a972c96524ac4713151aa7c4b03}\index{main.c@{main.c}!eval\_touch\_in@{eval\_touch\_in}}
+\index{eval\_touch\_in@{eval\_touch\_in}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{eval\_touch\_in()}{eval\_touch\_in()}}
+{\footnotesize\ttfamily \label{main_8c_a881c4a972c96524ac4713151aa7c4b03} 
+int eval\+\_\+touch\+\_\+in (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+int numero alusivo a la entrada capacitiva detectada 
+\end{DoxyReturn}
+\Hypertarget{main_8c_acefa02f57bf1170d5cf87cbdfc637426}\index{main.c@{main.c}!gpio\_pin\_proccess@{gpio\_pin\_proccess}}
+\index{gpio\_pin\_proccess@{gpio\_pin\_proccess}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{gpio\_pin\_proccess()}{gpio\_pin\_proccess()}}
+{\footnotesize\ttfamily \label{main_8c_acefa02f57bf1170d5cf87cbdfc637426} 
+void gpio\+\_\+pin\+\_\+proccess (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Manejo de pulsación de botón BOOT. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a9b1b023489c2d2ad6951cc4908d29a76}\index{main.c@{main.c}!I2C\_task@{I2C\_task}}
+\index{I2C\_task@{I2C\_task}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{I2C\_task()}{I2C\_task()}}
+{\footnotesize\ttfamily \label{main_8c_a9b1b023489c2d2ad6951cc4908d29a76} 
+static void I2\+C\+\_\+task (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{pv\+Parameters}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a189e21a4686fe361ba0fc884b05ada20}\index{main.c@{main.c}!i2c\_task\_func@{i2c\_task\_func}}
+\index{i2c\_task\_func@{i2c\_task\_func}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_task\_func()}{i2c\_task\_func()}}
+{\footnotesize\ttfamily \label{main_8c_a189e21a4686fe361ba0fc884b05ada20} 
+static void i2c\+\_\+task\+\_\+func (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Funcion para definir e inicializar la tarea de I2C. 
+
+\Hypertarget{main_8c_af344410eb9d780d502adb1954d4be54a}\index{main.c@{main.c}!inicio\_hw@{inicio\_hw}}
+\index{inicio\_hw@{inicio\_hw}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{inicio\_hw()}{inicio\_hw()}}
+{\footnotesize\ttfamily \label{main_8c_af344410eb9d780d502adb1954d4be54a} 
+void inicio\+\_\+hw (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_a3b1a6f271e795ca21ad8060b69452ade}\index{main.c@{main.c}!init\_led\_strip@{init\_led\_strip}}
+\index{init\_led\_strip@{init\_led\_strip}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{init\_led\_strip()}{init\_led\_strip()}}
+{\footnotesize\ttfamily \label{main_8c_a3b1a6f271e795ca21ad8060b69452ade} 
+static esp\+\_\+err\+\_\+t init\+\_\+led\+\_\+strip (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a768b0718ac3959aa2f70355fd97ce16d}\index{main.c@{main.c}!init\_uart@{init\_uart}}
+\index{init\_uart@{init\_uart}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{init\_uart()}{init\_uart()}}
+{\footnotesize\ttfamily \label{main_8c_a768b0718ac3959aa2f70355fd97ce16d} 
+static void init\+\_\+uart (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_af362463259552c8f38927606087eb30d}\index{main.c@{main.c}!out\_relay@{out\_relay}}
+\index{out\_relay@{out\_relay}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{out\_relay()}{out\_relay()}}
+{\footnotesize\ttfamily \label{main_8c_af362463259552c8f38927606087eb30d} 
+void out\+\_\+relay (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_a37424074ab92473cb316db758f313ce3}\index{main.c@{main.c}!press\_proccess@{press\_proccess}}
+\index{press\_proccess@{press\_proccess}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{press\_proccess()}{press\_proccess()}}
+{\footnotesize\ttfamily \label{main_8c_a37424074ab92473cb316db758f313ce3} 
+void press\+\_\+proccess (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Manejo de estados de la pulsación de botón BOOT. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a4f2e99edbf0b589a8622aac0f8c6a42e}\index{main.c@{main.c}!set\_pwm\_duty@{set\_pwm\_duty}}
+\index{set\_pwm\_duty@{set\_pwm\_duty}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{set\_pwm\_duty()}{set\_pwm\_duty()}}
+{\footnotesize\ttfamily \label{main_8c_a4f2e99edbf0b589a8622aac0f8c6a42e} 
+void set\+\_\+pwm\+\_\+duty (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_ad01d7faf784088d8933a7e88d0a614a3}\index{main.c@{main.c}!touch\_read@{touch\_read}}
+\index{touch\_read@{touch\_read}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_read()}{touch\_read()}}
+{\footnotesize\ttfamily \label{main_8c_ad01d7faf784088d8933a7e88d0a614a3} 
+void touch\+\_\+read (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{main_8c_a3d6bce98e9e733dd2cc08c2d3f9bab6c}\index{main.c@{main.c}!UART\_task@{UART\_task}}
+\index{UART\_task@{UART\_task}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{UART\_task()}{UART\_task()}}
+{\footnotesize\ttfamily \label{main_8c_a3d6bce98e9e733dd2cc08c2d3f9bab6c} 
+static void UART\+\_\+task (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{pv\+Parameters}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_ac7cc93cd8a1e3947808a86c61c47142b}\index{main.c@{main.c}!valve\_outputs@{valve\_outputs}}
+\index{valve\_outputs@{valve\_outputs}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{valve\_outputs()}{valve\_outputs()}}
+{\footnotesize\ttfamily \label{main_8c_ac7cc93cd8a1e3947808a86c61c47142b} 
+void valve\+\_\+outputs (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{main_8c_a8fad2ab5c7e2add7ca0a5aa441872762}\index{main.c@{main.c}!adc1\_chars@{adc1\_chars}}
+\index{adc1\_chars@{adc1\_chars}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{adc1\_chars}{adc1\_chars}}
+{\footnotesize\ttfamily \label{main_8c_a8fad2ab5c7e2add7ca0a5aa441872762} 
+esp\+\_\+adc\+\_\+cal\+\_\+characteristics\+\_\+t adc1\+\_\+chars\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a83fc1af92e29717b4513d121b0c72c7d}\index{main.c@{main.c}!b@{b}}
+\index{b@{b}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{b}{b}}
+{\footnotesize\ttfamily \label{main_8c_a83fc1af92e29717b4513d121b0c72c7d} 
+float b = 255 \texorpdfstring{$\ast$}{*} 0.\+5}
+
+\Hypertarget{main_8c_acc8a154312b88e7101f35a0e4ab2c8c6}\index{main.c@{main.c}!B\_Bomba@{B\_Bomba}}
+\index{B\_Bomba@{B\_Bomba}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Bomba}{B\_Bomba}}
+{\footnotesize\ttfamily \label{main_8c_acc8a154312b88e7101f35a0e4ab2c8c6} 
+bool B\+\_\+\+Bomba = 0}
+
+\Hypertarget{main_8c_afbff6d94979ebda3756d1bf22d49f18d}\index{main.c@{main.c}!B\_Caliente\_Down@{B\_Caliente\_Down}}
+\index{B\_Caliente\_Down@{B\_Caliente\_Down}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Caliente\_Down}{B\_Caliente\_Down}}
+{\footnotesize\ttfamily \label{main_8c_afbff6d94979ebda3756d1bf22d49f18d} 
+bool B\+\_\+\+Caliente\+\_\+\+Down = 0}
+
+\Hypertarget{main_8c_a72be9242d303cab76531adb80816e09a}\index{main.c@{main.c}!B\_Caliente\_Up@{B\_Caliente\_Up}}
+\index{B\_Caliente\_Up@{B\_Caliente\_Up}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Caliente\_Up}{B\_Caliente\_Up}}
+{\footnotesize\ttfamily \label{main_8c_a72be9242d303cab76531adb80816e09a} 
+bool B\+\_\+\+Caliente\+\_\+\+Up = 0}
+
+\Hypertarget{main_8c_ae2564bef16747b9aee8e563b298670d1}\index{main.c@{main.c}!B\_Compresor@{B\_Compresor}}
+\index{B\_Compresor@{B\_Compresor}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Compresor}{B\_Compresor}}
+{\footnotesize\ttfamily \label{main_8c_ae2564bef16747b9aee8e563b298670d1} 
+bool B\+\_\+\+Compresor = 0}
+
+\Hypertarget{main_8c_ad26b777c3b1b05b249c1b70cba9d8a54}\index{main.c@{main.c}!B\_Cooler@{B\_Cooler}}
+\index{B\_Cooler@{B\_Cooler}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Cooler}{B\_Cooler}}
+{\footnotesize\ttfamily \label{main_8c_ad26b777c3b1b05b249c1b70cba9d8a54} 
+bool B\+\_\+\+Cooler = 0}
+
+\Hypertarget{main_8c_a313ac8f4292dfa385f4e8f2fb2553239}\index{main.c@{main.c}!B\_Electrovalvula\_CO2@{B\_Electrovalvula\_CO2}}
+\index{B\_Electrovalvula\_CO2@{B\_Electrovalvula\_CO2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Electrovalvula\_CO2}{B\_Electrovalvula\_CO2}}
+{\footnotesize\ttfamily \label{main_8c_a313ac8f4292dfa385f4e8f2fb2553239} 
+bool B\+\_\+\+Electrovalvula\+\_\+\+CO2 = 0}
+
+\Hypertarget{main_8c_a003611c9f1238288ce8d37bf82add008}\index{main.c@{main.c}!B\_Fria\_Down@{B\_Fria\_Down}}
+\index{B\_Fria\_Down@{B\_Fria\_Down}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Fria\_Down}{B\_Fria\_Down}}
+{\footnotesize\ttfamily \label{main_8c_a003611c9f1238288ce8d37bf82add008} 
+bool B\+\_\+\+Fria\+\_\+\+Down = 1}
+
+\Hypertarget{main_8c_afdc6abdbe04643803734ce27b9b9a439}\index{main.c@{main.c}!B\_Fria\_Up@{B\_Fria\_Up}}
+\index{B\_Fria\_Up@{B\_Fria\_Up}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Fria\_Up}{B\_Fria\_Up}}
+{\footnotesize\ttfamily \label{main_8c_afdc6abdbe04643803734ce27b9b9a439} 
+bool B\+\_\+\+Fria\+\_\+\+Up = 0}
+
+\Hypertarget{main_8c_a7bf6776449aca4196db7fb65ba3ee0f9}\index{main.c@{main.c}!b\_int@{b\_int}}
+\index{b\_int@{b\_int}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{b\_int}{b\_int}}
+{\footnotesize\ttfamily \label{main_8c_a7bf6776449aca4196db7fb65ba3ee0f9} 
+uint32\+\_\+t b\+\_\+int}
+
+\Hypertarget{main_8c_aa9af0db62be4cbe1ecb32b159ea9d084}\index{main.c@{main.c}!b\_perc@{b\_perc}}
+\index{b\_perc@{b\_perc}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{b\_perc}{b\_perc}}
+{\footnotesize\ttfamily \label{main_8c_aa9af0db62be4cbe1ecb32b159ea9d084} 
+float b\+\_\+perc = 0.\+5}
+
+\Hypertarget{main_8c_ab9d825764b9668103d966c578839786c}\index{main.c@{main.c}!B\_Resistencia@{B\_Resistencia}}
+\index{B\_Resistencia@{B\_Resistencia}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{B\_Resistencia}{B\_Resistencia}}
+{\footnotesize\ttfamily \label{main_8c_ab9d825764b9668103d966c578839786c} 
+bool B\+\_\+\+Resistencia = 0}
+
+\Hypertarget{main_8c_a6e2d0a8b86c8b5dad71a0271be39995b}\index{main.c@{main.c}!cal\_filt\_dwn\_nvs@{cal\_filt\_dwn\_nvs}}
+\index{cal\_filt\_dwn\_nvs@{cal\_filt\_dwn\_nvs}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{cal\_filt\_dwn\_nvs}{cal\_filt\_dwn\_nvs}}
+{\footnotesize\ttfamily \label{main_8c_a6e2d0a8b86c8b5dad71a0271be39995b} 
+uint32\+\_\+t cal\+\_\+filt\+\_\+dwn\+\_\+nvs}
+
+\Hypertarget{main_8c_a94c821e6be59925e19c8f8b8c5cf5131}\index{main.c@{main.c}!cal\_filt\_up\_nvs@{cal\_filt\_up\_nvs}}
+\index{cal\_filt\_up\_nvs@{cal\_filt\_up\_nvs}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{cal\_filt\_up\_nvs}{cal\_filt\_up\_nvs}}
+{\footnotesize\ttfamily \label{main_8c_a94c821e6be59925e19c8f8b8c5cf5131} 
+uint32\+\_\+t cal\+\_\+filt\+\_\+up\+\_\+nvs}
+
+\Hypertarget{main_8c_a7e27fe0e33db5d576988041493bab938}\index{main.c@{main.c}!calib@{calib}}
+\index{calib@{calib}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{calib}{calib}}
+{\footnotesize\ttfamily \label{main_8c_a7e27fe0e33db5d576988041493bab938} 
+uint8\+\_\+t calib = 100}
+
+\Hypertarget{main_8c_a42f775836df3974be8a437b9839064ed}\index{main.c@{main.c}!calib\_stage@{calib\_stage}}
+\index{calib\_stage@{calib\_stage}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{calib\_stage}{calib\_stage}}
+{\footnotesize\ttfamily \label{main_8c_a42f775836df3974be8a437b9839064ed} 
+int calib\+\_\+stage = \mbox{\hyperlink{main_8c_a5462a9ac17f992f72630d3bd50e1abe8}{CALIB\+\_\+\+STAGE\+\_\+1}}}
+
+\Hypertarget{main_8c_aff7324753961122feb938f7d6118d0aa}\index{main.c@{main.c}!Caliente@{Caliente}}
+\index{Caliente@{Caliente}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Caliente}{Caliente}}
+{\footnotesize\ttfamily \label{main_8c_aff7324753961122feb938f7d6118d0aa} 
+float Caliente}
+
+\Hypertarget{main_8c_a7a096f24ea0ce7703acf9c010b141655}\index{main.c@{main.c}!caudal@{caudal}}
+\index{caudal@{caudal}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{caudal}{caudal}}
+{\footnotesize\ttfamily \label{main_8c_a7a096f24ea0ce7703acf9c010b141655} 
+float caudal = 0.\+6}
+
+\Hypertarget{main_8c_ad0a0c97c38d3abca18c30142506581af}\index{main.c@{main.c}!cont\_pin\_pressed@{cont\_pin\_pressed}}
+\index{cont\_pin\_pressed@{cont\_pin\_pressed}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{cont\_pin\_pressed}{cont\_pin\_pressed}}
+{\footnotesize\ttfamily \label{main_8c_ad0a0c97c38d3abca18c30142506581af} 
+int cont\+\_\+pin\+\_\+pressed = 5}
+
+\Hypertarget{main_8c_a2c6a3fb7cddd9bd7254692264962b5b3}\index{main.c@{main.c}!contador@{contador}}
+\index{contador@{contador}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{contador}{contador}}
+{\footnotesize\ttfamily \label{main_8c_a2c6a3fb7cddd9bd7254692264962b5b3} 
+int contador = 0}
+
+\Hypertarget{main_8c_ad43c3812e6d13e0518d9f8b8f463ffcf}\index{main.c@{main.c}!count@{count}}
+\index{count@{count}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{count}{count}}
+{\footnotesize\ttfamily \label{main_8c_ad43c3812e6d13e0518d9f8b8f463ffcf} 
+int count = 0}
+
+\Hypertarget{main_8c_a57d9667250ae776c25b4a95f55d9f500}\index{main.c@{main.c}!count\_mot\_off@{count\_mot\_off}}
+\index{count\_mot\_off@{count\_mot\_off}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{count\_mot\_off}{count\_mot\_off}}
+{\footnotesize\ttfamily \label{main_8c_a57d9667250ae776c25b4a95f55d9f500} 
+uint32\+\_\+t count\+\_\+mot\+\_\+off = 100}
+
+\Hypertarget{main_8c_a5982ed8a6b77a7b1ba0e846b77941773}\index{main.c@{main.c}!count\_touch\_read@{count\_touch\_read}}
+\index{count\_touch\_read@{count\_touch\_read}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{count\_touch\_read}{count\_touch\_read}}
+{\footnotesize\ttfamily \label{main_8c_a5982ed8a6b77a7b1ba0e846b77941773} 
+int count\+\_\+touch\+\_\+read = 10}
+
+\Hypertarget{main_8c_a31028451a8154078fd04834a01335ecf}\index{main.c@{main.c}!demora@{demora}}
+\index{demora@{demora}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{demora}{demora}}
+{\footnotesize\ttfamily \label{main_8c_a31028451a8154078fd04834a01335ecf} 
+int demora = 0}
+
+\Hypertarget{main_8c_a9a01ab79e7f86e08092abc34a739cf55}\index{main.c@{main.c}!EV1@{EV1}}
+\index{EV1@{EV1}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV1}{EV1}}
+{\footnotesize\ttfamily \label{main_8c_a9a01ab79e7f86e08092abc34a739cf55} 
+bool EV1 = 0}
+
+\Hypertarget{main_8c_af085116ebb9445a49615ab7e6b8cf6d9}\index{main.c@{main.c}!EV2@{EV2}}
+\index{EV2@{EV2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV2}{EV2}}
+{\footnotesize\ttfamily \label{main_8c_af085116ebb9445a49615ab7e6b8cf6d9} 
+bool EV2 = 0}
+
+\Hypertarget{main_8c_a2727b905115817ed1bed788415bffb60}\index{main.c@{main.c}!EV3@{EV3}}
+\index{EV3@{EV3}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV3}{EV3}}
+{\footnotesize\ttfamily \label{main_8c_a2727b905115817ed1bed788415bffb60} 
+bool EV3 = 0}
+
+\Hypertarget{main_8c_a1230c434905efdcce36a36cb9252a283}\index{main.c@{main.c}!EV4@{EV4}}
+\index{EV4@{EV4}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV4}{EV4}}
+{\footnotesize\ttfamily \label{main_8c_a1230c434905efdcce36a36cb9252a283} 
+bool EV4 = 0}
+
+\Hypertarget{main_8c_a51336de3350133c28585d361c551779c}\index{main.c@{main.c}!EV5@{EV5}}
+\index{EV5@{EV5}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV5}{EV5}}
+{\footnotesize\ttfamily \label{main_8c_a51336de3350133c28585d361c551779c} 
+bool EV5 = 0}
+
+\Hypertarget{main_8c_a9cfc9b9096ef422d15462a89b34d58ee}\index{main.c@{main.c}!EV6@{EV6}}
+\index{EV6@{EV6}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{EV6}{EV6}}
+{\footnotesize\ttfamily \label{main_8c_a9cfc9b9096ef422d15462a89b34d58ee} 
+bool EV6 = 0}
+
+\Hypertarget{main_8c_a224be0a54a05c0313c05af69a8fe40ed}\index{main.c@{main.c}!filtered\_Caudal\_Down@{filtered\_Caudal\_Down}}
+\index{filtered\_Caudal\_Down@{filtered\_Caudal\_Down}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down}{filtered\_Caudal\_Down}}
+{\footnotesize\ttfamily \label{main_8c_a224be0a54a05c0313c05af69a8fe40ed} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down}
+
+\Hypertarget{main_8c_a16c9d442e067a309319f63c427a0674c}\index{main.c@{main.c}!filtered\_Caudal\_Down\_Ant@{filtered\_Caudal\_Down\_Ant}}
+\index{filtered\_Caudal\_Down\_Ant@{filtered\_Caudal\_Down\_Ant}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down\_Ant}{filtered\_Caudal\_Down\_Ant}}
+{\footnotesize\ttfamily \label{main_8c_a16c9d442e067a309319f63c427a0674c} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Ant}
+
+\Hypertarget{main_8c_a9453b6b5a9c6a4b087630eb2154b27f5}\index{main.c@{main.c}!filtered\_Caudal\_Down\_Base@{filtered\_Caudal\_Down\_Base}}
+\index{filtered\_Caudal\_Down\_Base@{filtered\_Caudal\_Down\_Base}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down\_Base}{filtered\_Caudal\_Down\_Base}}
+{\footnotesize\ttfamily \label{main_8c_a9453b6b5a9c6a4b087630eb2154b27f5} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Base}
+
+\Hypertarget{main_8c_a871af545218b097979546f63bb3c8c6d}\index{main.c@{main.c}!filtered\_Caudal\_Down\_Touch@{filtered\_Caudal\_Down\_Touch}}
+\index{filtered\_Caudal\_Down\_Touch@{filtered\_Caudal\_Down\_Touch}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down\_Touch}{filtered\_Caudal\_Down\_Touch}}
+{\footnotesize\ttfamily \label{main_8c_a871af545218b097979546f63bb3c8c6d} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch}
+
+\Hypertarget{main_8c_aecf0f29588d42848f3a217770e8e8d96}\index{main.c@{main.c}!filtered\_Caudal\_Down\_Touch\_toValidate@{filtered\_Caudal\_Down\_Touch\_toValidate}}
+\index{filtered\_Caudal\_Down\_Touch\_toValidate@{filtered\_Caudal\_Down\_Touch\_toValidate}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down\_Touch\_toValidate}{filtered\_Caudal\_Down\_Touch\_toValidate}}
+{\footnotesize\ttfamily \label{main_8c_aecf0f29588d42848f3a217770e8e8d96} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch\+\_\+to\+Validate}
+
+\Hypertarget{main_8c_ad5334e0407c2bbd4bf41fd722c3d2c7e}\index{main.c@{main.c}!filtered\_Caudal\_Down\_Touch\_Validated@{filtered\_Caudal\_Down\_Touch\_Validated}}
+\index{filtered\_Caudal\_Down\_Touch\_Validated@{filtered\_Caudal\_Down\_Touch\_Validated}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Down\_Touch\_Validated}{filtered\_Caudal\_Down\_Touch\_Validated}}
+{\footnotesize\ttfamily \label{main_8c_ad5334e0407c2bbd4bf41fd722c3d2c7e} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Down\+\_\+\+Touch\+\_\+\+Validated = 0}
+
+\Hypertarget{main_8c_a3341cafaf09b2d8804dd4e6e6f99af9f}\index{main.c@{main.c}!filtered\_Caudal\_Up@{filtered\_Caudal\_Up}}
+\index{filtered\_Caudal\_Up@{filtered\_Caudal\_Up}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up}{filtered\_Caudal\_Up}}
+{\footnotesize\ttfamily \label{main_8c_a3341cafaf09b2d8804dd4e6e6f99af9f} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up}
+
+\Hypertarget{main_8c_a1559f144038e967695f622d6f5d75d6a}\index{main.c@{main.c}!filtered\_Caudal\_Up\_Ant@{filtered\_Caudal\_Up\_Ant}}
+\index{filtered\_Caudal\_Up\_Ant@{filtered\_Caudal\_Up\_Ant}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up\_Ant}{filtered\_Caudal\_Up\_Ant}}
+{\footnotesize\ttfamily \label{main_8c_a1559f144038e967695f622d6f5d75d6a} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Ant}
+
+\Hypertarget{main_8c_aa5a789cd5bfc97d6a3b6e88196310ce0}\index{main.c@{main.c}!filtered\_Caudal\_Up\_Base@{filtered\_Caudal\_Up\_Base}}
+\index{filtered\_Caudal\_Up\_Base@{filtered\_Caudal\_Up\_Base}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up\_Base}{filtered\_Caudal\_Up\_Base}}
+{\footnotesize\ttfamily \label{main_8c_aa5a789cd5bfc97d6a3b6e88196310ce0} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Base}
+
+\Hypertarget{main_8c_a650ba321e5b1db1cbf10614505a55084}\index{main.c@{main.c}!filtered\_Caudal\_Up\_Touch@{filtered\_Caudal\_Up\_Touch}}
+\index{filtered\_Caudal\_Up\_Touch@{filtered\_Caudal\_Up\_Touch}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up\_Touch}{filtered\_Caudal\_Up\_Touch}}
+{\footnotesize\ttfamily \label{main_8c_a650ba321e5b1db1cbf10614505a55084} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch}
+
+\Hypertarget{main_8c_a8f06fc663badcb7af2cd312c0000d884}\index{main.c@{main.c}!filtered\_Caudal\_Up\_Touch\_toValidate@{filtered\_Caudal\_Up\_Touch\_toValidate}}
+\index{filtered\_Caudal\_Up\_Touch\_toValidate@{filtered\_Caudal\_Up\_Touch\_toValidate}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up\_Touch\_toValidate}{filtered\_Caudal\_Up\_Touch\_toValidate}}
+{\footnotesize\ttfamily \label{main_8c_a8f06fc663badcb7af2cd312c0000d884} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch\+\_\+to\+Validate}
+
+\Hypertarget{main_8c_a85c88741e7553a1836631b0a82515b35}\index{main.c@{main.c}!filtered\_Caudal\_Up\_Touch\_Validated@{filtered\_Caudal\_Up\_Touch\_Validated}}
+\index{filtered\_Caudal\_Up\_Touch\_Validated@{filtered\_Caudal\_Up\_Touch\_Validated}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Caudal\_Up\_Touch\_Validated}{filtered\_Caudal\_Up\_Touch\_Validated}}
+{\footnotesize\ttfamily \label{main_8c_a85c88741e7553a1836631b0a82515b35} 
+uint32\+\_\+t filtered\+\_\+\+Caudal\+\_\+\+Up\+\_\+\+Touch\+\_\+\+Validated = 0}
+
+\Hypertarget{main_8c_a3c0c5d407310f82053875a3096391913}\index{main.c@{main.c}!filtered\_Fuga@{filtered\_Fuga}}
+\index{filtered\_Fuga@{filtered\_Fuga}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga}{filtered\_Fuga}}
+{\footnotesize\ttfamily \label{main_8c_a3c0c5d407310f82053875a3096391913} 
+uint32\+\_\+t filtered\+\_\+\+Fuga}
+
+\Hypertarget{main_8c_aeacf863ec27cfa87abb2ef53d8442930}\index{main.c@{main.c}!filtered\_Fuga\_Ant@{filtered\_Fuga\_Ant}}
+\index{filtered\_Fuga\_Ant@{filtered\_Fuga\_Ant}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga\_Ant}{filtered\_Fuga\_Ant}}
+{\footnotesize\ttfamily \label{main_8c_aeacf863ec27cfa87abb2ef53d8442930} 
+uint32\+\_\+t filtered\+\_\+\+Fuga\+\_\+\+Ant}
+
+\Hypertarget{main_8c_ab37453c5a0893c95c4e4e8bdccb97e8d}\index{main.c@{main.c}!filtered\_Fuga\_Base@{filtered\_Fuga\_Base}}
+\index{filtered\_Fuga\_Base@{filtered\_Fuga\_Base}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga\_Base}{filtered\_Fuga\_Base}}
+{\footnotesize\ttfamily \label{main_8c_ab37453c5a0893c95c4e4e8bdccb97e8d} 
+uint32\+\_\+t filtered\+\_\+\+Fuga\+\_\+\+Base}
+
+\Hypertarget{main_8c_a01677cfdc26b35f8f7d1051869664dc0}\index{main.c@{main.c}!filtered\_Fuga\_Base\_Touch@{filtered\_Fuga\_Base\_Touch}}
+\index{filtered\_Fuga\_Base\_Touch@{filtered\_Fuga\_Base\_Touch}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga\_Base\_Touch}{filtered\_Fuga\_Base\_Touch}}
+{\footnotesize\ttfamily \label{main_8c_a01677cfdc26b35f8f7d1051869664dc0} 
+uint32\+\_\+t filtered\+\_\+\+Fuga\+\_\+\+Base\+\_\+\+Touch}
+
+\Hypertarget{main_8c_a91f0f7d10132107668ef5a3bf1018a2b}\index{main.c@{main.c}!filtered\_Fuga\_Touch\_toValidate@{filtered\_Fuga\_Touch\_toValidate}}
+\index{filtered\_Fuga\_Touch\_toValidate@{filtered\_Fuga\_Touch\_toValidate}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga\_Touch\_toValidate}{filtered\_Fuga\_Touch\_toValidate}}
+{\footnotesize\ttfamily \label{main_8c_a91f0f7d10132107668ef5a3bf1018a2b} 
+uint32\+\_\+t filtered\+\_\+\+Fuga\+\_\+\+Touch\+\_\+to\+Validate}
+
+\Hypertarget{main_8c_a1112d46eaf310f9811679c443ff4d28b}\index{main.c@{main.c}!filtered\_Fuga\_Touch\_Validated@{filtered\_Fuga\_Touch\_Validated}}
+\index{filtered\_Fuga\_Touch\_Validated@{filtered\_Fuga\_Touch\_Validated}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Fuga\_Touch\_Validated}{filtered\_Fuga\_Touch\_Validated}}
+{\footnotesize\ttfamily \label{main_8c_a1112d46eaf310f9811679c443ff4d28b} 
+uint32\+\_\+t filtered\+\_\+\+Fuga\+\_\+\+Touch\+\_\+\+Validated}
+
+\Hypertarget{main_8c_a439f46fc14cf82aa990bc86a8d5022ff}\index{main.c@{main.c}!filtered\_Nivel@{filtered\_Nivel}}
+\index{filtered\_Nivel@{filtered\_Nivel}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel}{filtered\_Nivel}}
+{\footnotesize\ttfamily \label{main_8c_a439f46fc14cf82aa990bc86a8d5022ff} 
+uint32\+\_\+t filtered\+\_\+\+Nivel}
+
+\Hypertarget{main_8c_a7c6e02e22fc3e9eb8477a90b60822b35}\index{main.c@{main.c}!filtered\_Nivel\_Ant@{filtered\_Nivel\_Ant}}
+\index{filtered\_Nivel\_Ant@{filtered\_Nivel\_Ant}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel\_Ant}{filtered\_Nivel\_Ant}}
+{\footnotesize\ttfamily \label{main_8c_a7c6e02e22fc3e9eb8477a90b60822b35} 
+uint32\+\_\+t filtered\+\_\+\+Nivel\+\_\+\+Ant}
+
+\Hypertarget{main_8c_a14b3d1e4303a64d54c78d42c91ed8932}\index{main.c@{main.c}!filtered\_Nivel\_Base@{filtered\_Nivel\_Base}}
+\index{filtered\_Nivel\_Base@{filtered\_Nivel\_Base}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel\_Base}{filtered\_Nivel\_Base}}
+{\footnotesize\ttfamily \label{main_8c_a14b3d1e4303a64d54c78d42c91ed8932} 
+uint32\+\_\+t filtered\+\_\+\+Nivel\+\_\+\+Base}
+
+\Hypertarget{main_8c_ad127fe8596475e8452b6c41773b32f5c}\index{main.c@{main.c}!filtered\_Nivel\_Base\_Touch@{filtered\_Nivel\_Base\_Touch}}
+\index{filtered\_Nivel\_Base\_Touch@{filtered\_Nivel\_Base\_Touch}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel\_Base\_Touch}{filtered\_Nivel\_Base\_Touch}}
+{\footnotesize\ttfamily \label{main_8c_ad127fe8596475e8452b6c41773b32f5c} 
+uint32\+\_\+t filtered\+\_\+\+Nivel\+\_\+\+Base\+\_\+\+Touch}
+
+\Hypertarget{main_8c_a4db5d7962859d3a1e1831384644313d2}\index{main.c@{main.c}!filtered\_Nivel\_Touch\_toValidate@{filtered\_Nivel\_Touch\_toValidate}}
+\index{filtered\_Nivel\_Touch\_toValidate@{filtered\_Nivel\_Touch\_toValidate}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel\_Touch\_toValidate}{filtered\_Nivel\_Touch\_toValidate}}
+{\footnotesize\ttfamily \label{main_8c_a4db5d7962859d3a1e1831384644313d2} 
+uint32\+\_\+t filtered\+\_\+\+Nivel\+\_\+\+Touch\+\_\+to\+Validate}
+
+\Hypertarget{main_8c_ad01f4b7f5ffeaf5468871e294034df69}\index{main.c@{main.c}!filtered\_Nivel\_Touch\_Validated@{filtered\_Nivel\_Touch\_Validated}}
+\index{filtered\_Nivel\_Touch\_Validated@{filtered\_Nivel\_Touch\_Validated}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Nivel\_Touch\_Validated}{filtered\_Nivel\_Touch\_Validated}}
+{\footnotesize\ttfamily \label{main_8c_ad01f4b7f5ffeaf5468871e294034df69} 
+uint32\+\_\+t filtered\+\_\+\+Nivel\+\_\+\+Touch\+\_\+\+Validated}
+
+\Hypertarget{main_8c_a2454d6f86d995f57330d7474830cb62c}\index{main.c@{main.c}!filtered\_Touch\_ON@{filtered\_Touch\_ON}}
+\index{filtered\_Touch\_ON@{filtered\_Touch\_ON}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Touch\_ON}{filtered\_Touch\_ON}}
+{\footnotesize\ttfamily \label{main_8c_a2454d6f86d995f57330d7474830cb62c} 
+uint32\+\_\+t filtered\+\_\+\+Touch\+\_\+\+ON}
+
+\Hypertarget{main_8c_a575da98ad4d6d7cb45535ecdaa3eda59}\index{main.c@{main.c}!filtered\_Touch\_ON\_Base@{filtered\_Touch\_ON\_Base}}
+\index{filtered\_Touch\_ON\_Base@{filtered\_Touch\_ON\_Base}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{filtered\_Touch\_ON\_Base}{filtered\_Touch\_ON\_Base}}
+{\footnotesize\ttfamily \label{main_8c_a575da98ad4d6d7cb45535ecdaa3eda59} 
+uint32\+\_\+t filtered\+\_\+\+Touch\+\_\+\+ON\+\_\+\+Base}
+
+\Hypertarget{main_8c_a7d4f17eca22ae283a2ee953a6bca33de}\index{main.c@{main.c}!first\_on@{first\_on}}
+\index{first\_on@{first\_on}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{first\_on}{first\_on}}
+{\footnotesize\ttfamily \label{main_8c_a7d4f17eca22ae283a2ee953a6bca33de} 
+bool first\+\_\+on = 0}
+
+\Hypertarget{main_8c_a424c7bdbe87a784a7a9b850704b18af9}\index{main.c@{main.c}!Fria@{Fria}}
+\index{Fria@{Fria}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Fria}{Fria}}
+{\footnotesize\ttfamily \label{main_8c_a424c7bdbe87a784a7a9b850704b18af9} 
+float Fria}
+
+\Hypertarget{main_8c_ab024beac6ad42bdde6178513057c3faf}\index{main.c@{main.c}!init\_calib\_stage@{init\_calib\_stage}}
+\index{init\_calib\_stage@{init\_calib\_stage}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{init\_calib\_stage}{init\_calib\_stage}}
+{\footnotesize\ttfamily \label{main_8c_ab024beac6ad42bdde6178513057c3faf} 
+bool init\+\_\+calib\+\_\+stage = false}
+
+\Hypertarget{main_8c_ae0c690118932b32ef40a74bb6a259acd}\index{main.c@{main.c}!interval@{interval}}
+\index{interval@{interval}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{interval}{interval}}
+{\footnotesize\ttfamily \label{main_8c_ae0c690118932b32ef40a74bb6a259acd} 
+int interval = 100}
+
+\Hypertarget{main_8c_abbc5a11f432a69a8fc4d2798e9302d6f}\index{main.c@{main.c}!led\_strip@{led\_strip}}
+\index{led\_strip@{led\_strip}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{led\_strip}{led\_strip}}
+{\footnotesize\ttfamily \label{main_8c_abbc5a11f432a69a8fc4d2798e9302d6f} 
+led\+\_\+strip\+\_\+handle\+\_\+t led\+\_\+strip}
+
+\Hypertarget{main_8c_acf4d33ee4cff36f69b924471174dcb11}\index{main.c@{main.c}!level@{level}}
+\index{level@{level}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{level}{level}}
+{\footnotesize\ttfamily \label{main_8c_acf4d33ee4cff36f69b924471174dcb11} 
+int level}
+
+\Hypertarget{main_8c_a75a8a10fdb017b33ceedc533d14a2355}\index{main.c@{main.c}!MAX\_PULSE\_DURATION\_MS@{MAX\_PULSE\_DURATION\_MS}}
+\index{MAX\_PULSE\_DURATION\_MS@{MAX\_PULSE\_DURATION\_MS}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_PULSE\_DURATION\_MS}{MAX\_PULSE\_DURATION\_MS}}
+{\footnotesize\ttfamily \label{main_8c_a75a8a10fdb017b33ceedc533d14a2355} 
+const int64\+\_\+t MAX\+\_\+\+PULSE\+\_\+\+DURATION\+\_\+\+MS = 1000\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_abe6aef46e4f943ddbdd8b0244a87cc86}\index{main.c@{main.c}!MIN\_PULSE\_DURATION\_MS@{MIN\_PULSE\_DURATION\_MS}}
+\index{MIN\_PULSE\_DURATION\_MS@{MIN\_PULSE\_DURATION\_MS}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_PULSE\_DURATION\_MS}{MIN\_PULSE\_DURATION\_MS}}
+{\footnotesize\ttfamily \label{main_8c_abe6aef46e4f943ddbdd8b0244a87cc86} 
+const int64\+\_\+t MIN\+\_\+\+PULSE\+\_\+\+DURATION\+\_\+\+MS = 50\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a68089df8c9ffdda964b884c86a73378d}\index{main.c@{main.c}!Natural@{Natural}}
+\index{Natural@{Natural}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Natural}{Natural}}
+{\footnotesize\ttfamily \label{main_8c_a68089df8c9ffdda964b884c86a73378d} 
+float Natural}
+
+\Hypertarget{main_8c_a4f71f8fd68931175372117ed7113687a}\index{main.c@{main.c}!on\_off\_debounce@{on\_off\_debounce}}
+\index{on\_off\_debounce@{on\_off\_debounce}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{on\_off\_debounce}{on\_off\_debounce}}
+{\footnotesize\ttfamily \label{main_8c_a4f71f8fd68931175372117ed7113687a} 
+uint8\+\_\+t on\+\_\+off\+\_\+debounce = 20}
+
+\Hypertarget{main_8c_ad88994ce17a3f0a9c5b862cc4636f54f}\index{main.c@{main.c}!once@{once}}
+\index{once@{once}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{once}{once}}
+{\footnotesize\ttfamily \label{main_8c_ad88994ce17a3f0a9c5b862cc4636f54f} 
+bool once = 0}
+
+\Hypertarget{main_8c_a7782aec3b2c89efea6a3a16432380a0f}\index{main.c@{main.c}!pag@{pag}}
+\index{pag@{pag}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{pag}{pag}}
+{\footnotesize\ttfamily \label{main_8c_a7782aec3b2c89efea6a3a16432380a0f} 
+int pag = 0}
+
+\Hypertarget{main_8c_a473ee3fcea196f6207eeda1e747746e8}\index{main.c@{main.c}!period@{period}}
+\index{period@{period}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{period}{period}}
+{\footnotesize\ttfamily \label{main_8c_a473ee3fcea196f6207eeda1e747746e8} 
+uint64\+\_\+t period = 10 \texorpdfstring{$\ast$}{*} 100000}
+
+\Hypertarget{main_8c_a332e8c3e95ad18bedc044b676eb639a0}\index{main.c@{main.c}!Pres\_Ent@{Pres\_Ent}}
+\index{Pres\_Ent@{Pres\_Ent}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Pres\_Ent}{Pres\_Ent}}
+{\footnotesize\ttfamily \label{main_8c_a332e8c3e95ad18bedc044b676eb639a0} 
+float Pres\+\_\+\+Ent}
+
+\Hypertarget{main_8c_a226afd075ec53e7b21d297a7e4b360f7}\index{main.c@{main.c}!Pres\_Sal@{Pres\_Sal}}
+\index{Pres\_Sal@{Pres\_Sal}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{Pres\_Sal}{Pres\_Sal}}
+{\footnotesize\ttfamily \label{main_8c_a226afd075ec53e7b21d297a7e4b360f7} 
+float Pres\+\_\+\+Sal}
+
+\Hypertarget{main_8c_a292a0d2c83d75b1078328c4423f0b00b}\index{main.c@{main.c}!press\_state@{press\_state}}
+\index{press\_state@{press\_state}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{press\_state}{press\_state}}
+{\footnotesize\ttfamily \label{main_8c_a292a0d2c83d75b1078328c4423f0b00b} 
+\mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6}{gpio\+\_\+state\+\_\+t}} press\+\_\+state = \mbox{\hyperlink{main_8c_a2ff5468d5ab752db6fa1fb95363392a6a1c92f09b92fd12d05b2821f19d7e8e15}{UNPRESSED}}}
+
+\Hypertarget{main_8c_accc1a6be27be811c0e918c5ff073d70c}\index{main.c@{main.c}!prom\_caliente@{prom\_caliente}}
+\index{prom\_caliente@{prom\_caliente}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{prom\_caliente}{prom\_caliente}}
+{\footnotesize\ttfamily \label{main_8c_accc1a6be27be811c0e918c5ff073d70c} 
+int prom\+\_\+caliente = 0}
+
+\Hypertarget{main_8c_adbbc23cd2d77b08a925ffe74b253ff52}\index{main.c@{main.c}!prom\_fria@{prom\_fria}}
+\index{prom\_fria@{prom\_fria}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{prom\_fria}{prom\_fria}}
+{\footnotesize\ttfamily \label{main_8c_adbbc23cd2d77b08a925ffe74b253ff52} 
+int prom\+\_\+fria = 0}
+
+\Hypertarget{main_8c_ad62f924ca44825e5a0804382e8b1fd53}\index{main.c@{main.c}!prom\_natural@{prom\_natural}}
+\index{prom\_natural@{prom\_natural}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{prom\_natural}{prom\_natural}}
+{\footnotesize\ttfamily \label{main_8c_ad62f924ca44825e5a0804382e8b1fd53} 
+int prom\+\_\+natural = 0}
+
+\Hypertarget{main_8c_a926882fff33ac746393cb315db8ceb59}\index{main.c@{main.c}!prom\_pres\_ent@{prom\_pres\_ent}}
+\index{prom\_pres\_ent@{prom\_pres\_ent}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{prom\_pres\_ent}{prom\_pres\_ent}}
+{\footnotesize\ttfamily \label{main_8c_a926882fff33ac746393cb315db8ceb59} 
+int prom\+\_\+pres\+\_\+ent = 0}
+
+\Hypertarget{main_8c_a737d50f00edb06eeab8334ba26e6cbc7}\index{main.c@{main.c}!prom\_pres\_sal@{prom\_pres\_sal}}
+\index{prom\_pres\_sal@{prom\_pres\_sal}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{prom\_pres\_sal}{prom\_pres\_sal}}
+{\footnotesize\ttfamily \label{main_8c_a737d50f00edb06eeab8334ba26e6cbc7} 
+int prom\+\_\+pres\+\_\+sal = 0}
+
+\Hypertarget{main_8c_a4788d82c901b9367dd5c0daff8a7616b}\index{main.c@{main.c}!r@{r}}
+\index{r@{r}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{r}{r}}
+{\footnotesize\ttfamily \label{main_8c_a4788d82c901b9367dd5c0daff8a7616b} 
+float r = 255 \texorpdfstring{$\ast$}{*} 0.\+5}
+
+\Hypertarget{main_8c_a64df39150b62d3f2221366ffa513a566}\index{main.c@{main.c}!r\_int@{r\_int}}
+\index{r\_int@{r\_int}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{r\_int}{r\_int}}
+{\footnotesize\ttfamily \label{main_8c_a64df39150b62d3f2221366ffa513a566} 
+uint32\+\_\+t r\+\_\+int}
+
+\Hypertarget{main_8c_a7d9fd33b0227140f24319c5fbee8dc55}\index{main.c@{main.c}!r\_perc@{r\_perc}}
+\index{r\_perc@{r\_perc}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{r\_perc}{r\_perc}}
+{\footnotesize\ttfamily \label{main_8c_a7d9fd33b0227140f24319c5fbee8dc55} 
+float r\+\_\+perc = 0.\+5}
+
+\Hypertarget{main_8c_a384ae2f533c957cef99b67609e211492}\index{main.c@{main.c}!set\_dir@{set\_dir}}
+\index{set\_dir@{set\_dir}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{set\_dir}{set\_dir}}
+{\footnotesize\ttfamily \label{main_8c_a384ae2f533c957cef99b67609e211492} 
+bool set\+\_\+dir = 1}
+
+\Hypertarget{main_8c_af4c3d36452cbb1d427ba3e7f8a628646}\index{main.c@{main.c}!tag2@{tag2}}
+\index{tag2@{tag2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{tag2}{tag2}}
+{\footnotesize\ttfamily \label{main_8c_af4c3d36452cbb1d427ba3e7f8a628646} 
+const char\texorpdfstring{$\ast$}{*} tag2 = "{}UART"{}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a61fc6209a48e9414bc6f6dff41c34f09}\index{main.c@{main.c}!TAG3@{TAG3}}
+\index{TAG3@{TAG3}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{TAG3}{TAG3}}
+{\footnotesize\ttfamily \label{main_8c_a61fc6209a48e9414bc6f6dff41c34f09} 
+const char\texorpdfstring{$\ast$}{*} TAG3 = "{}esp\+\_\+touch\+\_\+\+INFO"{}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a8e90da439cb56787a8a907f51232a376}\index{main.c@{main.c}!TAG\_GPIO@{TAG\_GPIO}}
+\index{TAG\_GPIO@{TAG\_GPIO}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{TAG\_GPIO}{TAG\_GPIO}}
+{\footnotesize\ttfamily \label{main_8c_a8e90da439cb56787a8a907f51232a376} 
+const char\texorpdfstring{$\ast$}{*} TAG\+\_\+\+GPIO = "{}GPIO\+\_\+\+STATE\+\_\+\+INFO"{}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a394764048e58be1487318f7ed4961168}\index{main.c@{main.c}!timerId@{timerId}}
+\index{timerId@{timerId}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{timerId}{timerId}}
+{\footnotesize\ttfamily \label{main_8c_a394764048e58be1487318f7ed4961168} 
+int timer\+Id = 1}
+
+\Hypertarget{main_8c_affd73c47171ef667337a37714233750f}\index{main.c@{main.c}!touch\_act\_detect@{touch\_act\_detect}}
+\index{touch\_act\_detect@{touch\_act\_detect}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_act\_detect}{touch\_act\_detect}}
+{\footnotesize\ttfamily \label{main_8c_affd73c47171ef667337a37714233750f} 
+int touch\+\_\+act\+\_\+detect = 0}
+
+\Hypertarget{main_8c_a59932cabfeb926a1a161250e28e339c2}\index{main.c@{main.c}!touch\_config\_state@{touch\_config\_state}}
+\index{touch\_config\_state@{touch\_config\_state}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_config\_state}{touch\_config\_state}}
+{\footnotesize\ttfamily \label{main_8c_a59932cabfeb926a1a161250e28e339c2} 
+\mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285}{touch\+\_\+config\+\_\+state\+\_\+t}} touch\+\_\+config\+\_\+state = \mbox{\hyperlink{main_8c_a9366a723c1a62aa1c7f4c2ddb38dd285a872d2750623fd1ee602d265c3388aafe}{TOUCH\+\_\+\+PAD\+\_\+\+ATTEN\+\_\+\+VOLTAGE1}}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_ab8dbcfd03e4b9f4f4f030cdee94b9b78}\index{main.c@{main.c}!touch\_duration@{touch\_duration}}
+\index{touch\_duration@{touch\_duration}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_duration}{touch\_duration}}
+{\footnotesize\ttfamily \label{main_8c_ab8dbcfd03e4b9f4f4f030cdee94b9b78} 
+int64\+\_\+t touch\+\_\+duration = 0\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_acfd99aae3beb69902cc61ada048db85a}\index{main.c@{main.c}!touch\_start\_time@{touch\_start\_time}}
+\index{touch\_start\_time@{touch\_start\_time}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_start\_time}{touch\_start\_time}}
+{\footnotesize\ttfamily \label{main_8c_acfd99aae3beb69902cc61ada048db85a} 
+int64\+\_\+t touch\+\_\+start\+\_\+time = 0\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_ae3491da34c6141c6811d109bc775dc75}\index{main.c@{main.c}!touch\_state@{touch\_state}}
+\index{touch\_state@{touch\_state}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{touch\_state}{touch\_state}}
+{\footnotesize\ttfamily \label{main_8c_ae3491da34c6141c6811d109bc775dc75} 
+\mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240}{touch\+\_\+state\+\_\+t}} touch\+\_\+state = \mbox{\hyperlink{main_8c_af0a1d1114ba348ba72086b6ab31b2240a03ee751cbd8b497a04c9cdb8c6a7f49b}{WAIT\+\_\+\+FOR\+\_\+\+TOUCH}}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{main_8c_a6a94f0282dad791016eae311c6470ea6}\index{main.c@{main.c}!xInitialTimeout@{xInitialTimeout}}
+\index{xInitialTimeout@{xInitialTimeout}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xInitialTimeout}{xInitialTimeout}}
+{\footnotesize\ttfamily \label{main_8c_a6a94f0282dad791016eae311c6470ea6} 
+Tick\+Type\+\_\+t x\+Initial\+Timeout = pd\+MS\+\_\+\+TO\+\_\+\+TICKS(3000)}
+
+\Hypertarget{main_8c_abed12e61e38e416f3fb7bb0efc4f67d8}\index{main.c@{main.c}!xInitialTimeout2@{xInitialTimeout2}}
+\index{xInitialTimeout2@{xInitialTimeout2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xInitialTimeout2}{xInitialTimeout2}}
+{\footnotesize\ttfamily \label{main_8c_abed12e61e38e416f3fb7bb0efc4f67d8} 
+Tick\+Type\+\_\+t x\+Initial\+Timeout2 = pd\+MS\+\_\+\+TO\+\_\+\+TICKS(1000)}
+
+\Hypertarget{main_8c_aa3252ed844031a7e654fc011f38118e4}\index{main.c@{main.c}!xTicksToWait@{xTicksToWait}}
+\index{xTicksToWait@{xTicksToWait}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xTicksToWait}{xTicksToWait}}
+{\footnotesize\ttfamily \label{main_8c_aa3252ed844031a7e654fc011f38118e4} 
+Tick\+Type\+\_\+t x\+Ticks\+To\+Wait}
+
+\Hypertarget{main_8c_ad13eace1a428b3b89e8124738a5cc596}\index{main.c@{main.c}!xTicksToWait2@{xTicksToWait2}}
+\index{xTicksToWait2@{xTicksToWait2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xTicksToWait2}{xTicksToWait2}}
+{\footnotesize\ttfamily \label{main_8c_ad13eace1a428b3b89e8124738a5cc596} 
+Tick\+Type\+\_\+t x\+Ticks\+To\+Wait2}
+
+\Hypertarget{main_8c_adfd18783eb98aaf63e580d49c9e17057}\index{main.c@{main.c}!xTimeOut@{xTimeOut}}
+\index{xTimeOut@{xTimeOut}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xTimeOut}{xTimeOut}}
+{\footnotesize\ttfamily \label{main_8c_adfd18783eb98aaf63e580d49c9e17057} 
+Time\+Out\+\_\+t x\+Time\+Out}
+
+\Hypertarget{main_8c_a1c90e67595f5d41f51d5c836bd353228}\index{main.c@{main.c}!xTimeOut2@{xTimeOut2}}
+\index{xTimeOut2@{xTimeOut2}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xTimeOut2}{xTimeOut2}}
+{\footnotesize\ttfamily \label{main_8c_a1c90e67595f5d41f51d5c836bd353228} 
+Time\+Out\+\_\+t x\+Time\+Out2}
+
+\Hypertarget{main_8c_ae19f314539bcae5fa20c0cdd58dddaf7}\index{main.c@{main.c}!xTimers@{xTimers}}
+\index{xTimers@{xTimers}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{xTimers}{xTimers}}
+{\footnotesize\ttfamily \label{main_8c_ae19f314539bcae5fa20c0cdd58dddaf7} 
+Timer\+Handle\+\_\+t x\+Timers}
+

@@ -5,8 +5,10 @@ idf_component_register(SRCS
     "wifi/wifi.c"
     "i2c/i2c_master.c"
     "i2c/i2c_slave.c"
+    "webserver/webserver.c"
     INCLUDE_DIRS "."
     "nvs"
     "timer"
     "wifi"
-    "i2c")
+    "i2c"
+    "webserver")

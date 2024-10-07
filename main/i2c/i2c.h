@@ -13,9 +13,14 @@
 #define I2C_MASTER_NUM I2C_NUM_0    // I2C numero 0
 #define I2C_SLAVE_NUM I2C_NUM_0     // I2C Port 0 para ESP32-C3
 
-#define I2C_MASTER_FREQ_HZ 100000   // Frecuencia de I2C (100 kHz)
-#define I2C_MASTER_TX_BUF_DISABLE 0 // No se usa buffer de TX
-#define I2C_MASTER_RX_BUF_DISABLE 0 // No se usa buffer de RX
+//! @brief Frecuencia de I2C (100 kHz)
+#define I2C_MASTER_FREQ_HZ 100000    
+
+//! @brief No se usa buffer de TX
+#define I2C_MASTER_TX_BUF_DISABLE 0 
+
+//! @brief No se usa buffer de RX
+#define I2C_MASTER_RX_BUF_DISABLE 0 
 #define I2C_MASTER_TIMEOUT_MS 1000  // Timeout en ms
 #define I2C_SLAVE_ADDR 0x28         // Dirección I2C del esclavo
 #define ACK_CHECK_EN 0x1            /*!< I2C master will check ack from slave*/

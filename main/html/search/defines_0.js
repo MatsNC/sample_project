@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['adc_5ffria_0',['adc_fria',['../main_8c.html#a5ef6bc8592d19ecaa6ffe5e9151ec29d',1,'main.c']]],
-  ['adc_5fnatural_1',['adc_natural',['../main_8c.html#a2ac72f8f231e05c115dc09547b5311eb',1,'main.c']]],
-  ['adc_5fpres_5fent_2',['adc_pres_ent',['../main_8c.html#a9b9a7e92bc3a46810eababc91e05b141',1,'main.c']]],
-  ['adc_5fpres_5fsal_3',['adc_pres_sal',['../main_8c.html#a4fafc8daa9e0922224feec977cb92173',1,'main.c']]]
+  ['ack_5fcheck_5fdis_0',['ACK_CHECK_DIS',['../i2c_8h.html#a8ad7ceb373ce664b1c2482a66537e7c0',1,'i2c.h']]],
+  ['ack_5fcheck_5fen_1',['ACK_CHECK_EN',['../i2c_8h.html#a7dd22b838d2b1f22d367e6cdef04ccc3',1,'i2c.h']]],
+  ['ack_5fval_2',['ACK_VAL',['../i2c_8h.html#a1d64a546dacc15052a6c4887f9d0020f',1,'i2c.h']]]
 ];

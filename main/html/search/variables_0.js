@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['adc1_5fchars_0',['adc1_chars',['../main_8c.html#a8fad2ab5c7e2add7ca0a5aa441872762',1,'main.c']]]
+  ['esp_5fnow_5foff_0',['esp_now_off',['../wifi_8h.html#a8dcd18acadba3e4db6d6e7ebb68fb3bd',1,'wifi.h']]]
 ];

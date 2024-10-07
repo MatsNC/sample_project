@@ -1,7 +1,12 @@
 var searchData=
 [
-  ['led_5fstrip_0',['LED_STRIP',['../main_8c.html#ab8c1fc2e74f4b61c6e152f2ae9844a65',1,'main.c']]],
-  ['led_5fstrip_1',['led_strip',['../main_8c.html#abbc5a11f432a69a8fc4d2798e9302d6f',1,'main.c']]],
-  ['led_5fstrip_5fmax_5fleds_2',['LED_STRIP_MAX_LEDS',['../main_8c.html#a84f3fa7795519fb2452340aff9c124d4',1,'main.c']]],
-  ['level_3',['level',['../main_8c.html#acf4d33ee4cff36f69b924471174dcb11',1,'main.c']]]
+  ['tag_0',['TAG',['../i2c__master_8c.html#a5a85b9c772bbeb480b209a3e6ea92b4c',1,'i2c_master.c']]],
+  ['tag_5fi2c_1',['TAG_I2C',['../i2c_8h.html#a88fea12806646398a1ff6886bfa980c8',1,'i2c.h']]],
+  ['tag_5fi2c_5fslv_2',['TAG_I2C_SLV',['../i2c_8h.html#ae8233f5539daf69695e317cf7f50ba10',1,'i2c.h']]],
+  ['tag_5fnvs_3',['TAG_NVS',['../nvs_8h.html#a89dc4569f7ee9f65df86cadefa7a4425',1,'nvs.h']]],
+  ['tag_5ftimer_4',['TAG_TIMER',['../timer_8c.html#a26f39f05d09df116ce9547575504c200',1,'timer.c']]],
+  ['tag_5fwifi_5',['TAG_WIFI',['../wifi_8h.html#a863305affefdf189e3f788e81c56d183',1,'wifi.h']]],
+  ['timer_2ec_6',['timer.c',['../timer_8c.html',1,'']]],
+  ['timer_2eh_7',['timer.h',['../timer_8h.html',1,'']]],
+  ['timer_5fcallback_8',['timer_callback',['../timer_8c.html#ad63135878d9d71623fdc526d5d80cb5d',1,'timer.c']]]
 ];

@@ -1,0 +1,48 @@
+\doxysection{timer/timer.c File Reference}
+\hypertarget{timer_8c}{}\label{timer_8c}\index{timer/timer.c@{timer/timer.c}}
+{\ttfamily \#include "{}timer.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{timer_8c_ad63135878d9d71623fdc526d5d80cb5d}{timer\+\_\+callback}} (void \texorpdfstring{$\ast$}{*}arg)
+\item 
+void \mbox{\hyperlink{timer_8c_a273e3782823154cdab417369080da910}{set\+\_\+timer}} (uint64\+\_\+t periodic\+\_\+value)
+\begin{DoxyCompactList}\small\item\em Set one timer and start once setting periodic value as the period. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{timer_8c_a26f39f05d09df116ce9547575504c200}{TAG\+\_\+\+TIMER}} = "{}TIMER\+\_\+\+INFO"{}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{timer_8c_a273e3782823154cdab417369080da910}\index{timer.c@{timer.c}!set\_timer@{set\_timer}}
+\index{set\_timer@{set\_timer}!timer.c@{timer.c}}
+\doxysubsubsection{\texorpdfstring{set\_timer()}{set\_timer()}}
+{\footnotesize\ttfamily \label{timer_8c_a273e3782823154cdab417369080da910} 
+void set\+\_\+timer (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{periodic\+\_\+value}{}\end{DoxyParamCaption})}
+
+
+
+Set one timer and start once setting periodic value as the period. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em periodic\+\_\+value} & time value for the timer \\
+\hline
+\end{DoxyParams}
+\Hypertarget{timer_8c_ad63135878d9d71623fdc526d5d80cb5d}\index{timer.c@{timer.c}!timer\_callback@{timer\_callback}}
+\index{timer\_callback@{timer\_callback}!timer.c@{timer.c}}
+\doxysubsubsection{\texorpdfstring{timer\_callback()}{timer\_callback()}}
+{\footnotesize\ttfamily \label{timer_8c_ad63135878d9d71623fdc526d5d80cb5d} 
+void timer\+\_\+callback (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{arg}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{timer_8c_a26f39f05d09df116ce9547575504c200}\index{timer.c@{timer.c}!TAG\_TIMER@{TAG\_TIMER}}
+\index{TAG\_TIMER@{TAG\_TIMER}!timer.c@{timer.c}}
+\doxysubsubsection{\texorpdfstring{TAG\_TIMER}{TAG\_TIMER}}
+{\footnotesize\ttfamily \label{timer_8c_a26f39f05d09df116ce9547575504c200} 
+const char\texorpdfstring{$\ast$}{*} TAG\+\_\+\+TIMER = "{}TIMER\+\_\+\+INFO"{}\hspace{0.3cm}{\ttfamily [static]}}
+

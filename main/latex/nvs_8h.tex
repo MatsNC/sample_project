@@ -1,0 +1,132 @@
+\doxysection{nvs/nvs.h File Reference}
+\hypertarget{nvs_8h}{}\label{nvs_8h}\index{nvs/nvs.h@{nvs/nvs.h}}
+{\ttfamily \#include "{}nvs\+\_\+flash.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+log.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{nvs_8h_a1ad3d847e3f03fa2b786624e78a16b08}{init\+\_\+nvs}} (void)
+\begin{DoxyCompactList}\small\item\em Inicializa la partición de NVS (Non-\/\+Volatile Storage). \end{DoxyCompactList}\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{nvs_8h_af27bb81c7f2f3b19c91709e8cba09e5f}{save\+\_\+value\+\_\+to\+\_\+nvs}} (const char \texorpdfstring{$\ast$}{*}, const char \texorpdfstring{$\ast$}{*}, uint32\+\_\+t)
+\begin{DoxyCompactList}\small\item\em Guarda un valor entero en la memoria NVS. \end{DoxyCompactList}\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{nvs_8h_a16ea06e12728bd6e5cc9ae1cad89aa71}{get\+\_\+value\+\_\+from\+\_\+nvs}} (const char \texorpdfstring{$\ast$}{*}, const char \texorpdfstring{$\ast$}{*}, uint32\+\_\+t \texorpdfstring{$\ast$}{*})
+\begin{DoxyCompactList}\small\item\em Recupera un valor entero desde la memoria NVS. \end{DoxyCompactList}\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{nvs_8h_af90f1e6538ca4541e8fa61650199b172}{save\+\_\+value\+\_\+if\+\_\+not\+\_\+exists}} (const char \texorpdfstring{$\ast$}{*}, const char \texorpdfstring{$\ast$}{*}, uint32\+\_\+t)
+\begin{DoxyCompactList}\small\item\em Guarda un valor entero en NVS si no existe previamente. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{nvs_8h_a89dc4569f7ee9f65df86cadefa7a4425}{TAG\+\_\+\+NVS}} = "{}NVS\+\_\+\+ENCAPSULADO"{}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{nvs_8h_a16ea06e12728bd6e5cc9ae1cad89aa71}\index{nvs.h@{nvs.h}!get\_value\_from\_nvs@{get\_value\_from\_nvs}}
+\index{get\_value\_from\_nvs@{get\_value\_from\_nvs}!nvs.h@{nvs.h}}
+\doxysubsubsection{\texorpdfstring{get\_value\_from\_nvs()}{get\_value\_from\_nvs()}}
+{\footnotesize\ttfamily \label{nvs_8h_a16ea06e12728bd6e5cc9ae1cad89aa71} 
+esp\+\_\+err\+\_\+t get\+\_\+value\+\_\+from\+\_\+nvs (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{namespace}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{uint32\+\_\+t \texorpdfstring{$\ast$}{*}}]{value}{}\end{DoxyParamCaption})}
+
+
+
+Recupera un valor entero desde la memoria NVS. 
+
+Esta función recupera un valor de tipo {\ttfamily uint32\+\_\+t} desde la NVS utilizando un espacio de nombres ({\ttfamily namespace}) y una clave ({\ttfamily key}). Si el valor no existe en la NVS, se establece un valor por defecto de 0.
+
+
+\begin{DoxyParams}{Parameters}
+{\em namespace} & Espacio de nombres desde donde se recuperará el valor. \\
+\hline
+{\em key} & Clave bajo la cual se almacenó el valor. \\
+\hline
+{\em value} & Puntero a una variable donde se almacenará el valor recuperado.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t
+\begin{DoxyItemize}
+\item ESP\+\_\+\+OK\+: El valor fue leído correctamente.
+\item ESP\+\_\+\+ERR\+\_\+\+NVS\+\_\+\+NOT\+\_\+\+FOUND\+: El valor no se encontró en NVS.
+\item Otros códigos de error si hubo un problema al leer desde NVS. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\Hypertarget{nvs_8h_a1ad3d847e3f03fa2b786624e78a16b08}\index{nvs.h@{nvs.h}!init\_nvs@{init\_nvs}}
+\index{init\_nvs@{init\_nvs}!nvs.h@{nvs.h}}
+\doxysubsubsection{\texorpdfstring{init\_nvs()}{init\_nvs()}}
+{\footnotesize\ttfamily \label{nvs_8h_a1ad3d847e3f03fa2b786624e78a16b08} 
+esp\+\_\+err\+\_\+t init\+\_\+nvs (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Inicializa la partición de NVS (Non-\/\+Volatile Storage). 
+
+Esta función inicializa la partición de NVS y, si es necesario, borra y reinicializa la partición si no hay páginas libres o se ha encontrado una nueva versión de NVS.
+
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t
+\begin{DoxyItemize}
+\item ESP\+\_\+\+OK\+: NVS fue inicializado correctamente.
+\item ESP\+\_\+\+ERR\+\_\+\+NVS\+\_\+\+NO\+\_\+\+FREE\+\_\+\+PAGES\+: No hay páginas libres en la partición NVS.
+\item ESP\+\_\+\+ERR\+\_\+\+NVS\+\_\+\+NEW\+\_\+\+VERSION\+\_\+\+FOUND\+: Se encontró una nueva versión de NVS.
+\item Otros códigos de error relacionados con NVS. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\Hypertarget{nvs_8h_af90f1e6538ca4541e8fa61650199b172}\index{nvs.h@{nvs.h}!save\_value\_if\_not\_exists@{save\_value\_if\_not\_exists}}
+\index{save\_value\_if\_not\_exists@{save\_value\_if\_not\_exists}!nvs.h@{nvs.h}}
+\doxysubsubsection{\texorpdfstring{save\_value\_if\_not\_exists()}{save\_value\_if\_not\_exists()}}
+{\footnotesize\ttfamily \label{nvs_8h_af90f1e6538ca4541e8fa61650199b172} 
+esp\+\_\+err\+\_\+t save\+\_\+value\+\_\+if\+\_\+not\+\_\+exists (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{namespace}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{uint32\+\_\+t}]{value}{}\end{DoxyParamCaption})}
+
+
+
+Guarda un valor entero en NVS si no existe previamente. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em namespace} & Espacio de nombres donde se almacenará el valor. \\
+\hline
+{\em key} & Clave bajo la cual se almacenará el valor. \\
+\hline
+{\em value} & El valor entero que se guardará.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t ESP\+\_\+\+OK si se guarda el valor o si ya existe, o un código de error en caso contrario. 
+\end{DoxyReturn}
+\Hypertarget{nvs_8h_af27bb81c7f2f3b19c91709e8cba09e5f}\index{nvs.h@{nvs.h}!save\_value\_to\_nvs@{save\_value\_to\_nvs}}
+\index{save\_value\_to\_nvs@{save\_value\_to\_nvs}!nvs.h@{nvs.h}}
+\doxysubsubsection{\texorpdfstring{save\_value\_to\_nvs()}{save\_value\_to\_nvs()}}
+{\footnotesize\ttfamily \label{nvs_8h_af27bb81c7f2f3b19c91709e8cba09e5f} 
+esp\+\_\+err\+\_\+t save\+\_\+value\+\_\+to\+\_\+nvs (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{namespace}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{uint32\+\_\+t}]{value}{}\end{DoxyParamCaption})}
+
+
+
+Guarda un valor entero en la memoria NVS. 
+
+Esta función guarda un valor de tipo {\ttfamily uint32\+\_\+t} en la NVS bajo un espacio de nombres ({\ttfamily namespace}) y una clave ({\ttfamily key}). El valor es guardado en la memoria flash para su persistencia.
+
+
+\begin{DoxyParams}{Parameters}
+{\em namespace} & Espacio de nombres donde se almacenará el valor. \\
+\hline
+{\em key} & Clave bajo la cual se almacenará el valor. \\
+\hline
+{\em value} & El valor entero que se guardará.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t
+\begin{DoxyItemize}
+\item ESP\+\_\+\+OK\+: El valor fue guardado correctamente.
+\item Otros códigos de error si hubo un problema al guardar o hacer commit en NVS. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{nvs_8h_a89dc4569f7ee9f65df86cadefa7a4425}\index{nvs.h@{nvs.h}!TAG\_NVS@{TAG\_NVS}}
+\index{TAG\_NVS@{TAG\_NVS}!nvs.h@{nvs.h}}
+\doxysubsubsection{\texorpdfstring{TAG\_NVS}{TAG\_NVS}}
+{\footnotesize\ttfamily \label{nvs_8h_a89dc4569f7ee9f65df86cadefa7a4425} 
+const char\texorpdfstring{$\ast$}{*} TAG\+\_\+\+NVS = "{}NVS\+\_\+\+ENCAPSULADO"{}\hspace{0.3cm}{\ttfamily [static]}}
+

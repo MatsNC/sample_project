@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['i2c_5ftask_0',['I2C_task',['../main_8c.html#a9b1b023489c2d2ad6951cc4908d29a76',1,'main.c']]],
-  ['i2c_5ftask_5ffunc_1',['i2c_task_func',['../main_8c.html#a189e21a4686fe361ba0fc884b05ada20',1,'main.c']]],
-  ['inicio_5fhw_2',['inicio_hw',['../main_8c.html#af344410eb9d780d502adb1954d4be54a',1,'main.c']]],
-  ['init_5fled_5fstrip_3',['init_led_strip',['../main_8c.html#a3b1a6f271e795ca21ad8060b69452ade',1,'main.c']]],
-  ['init_5fuart_4',['init_uart',['../main_8c.html#a768b0718ac3959aa2f70355fd97ce16d',1,'main.c']]]
+  ['save_5fvalue_5fif_5fnot_5fexists_0',['save_value_if_not_exists',['../nvs_8c.html#a6fa7e6771e3c3a66bfeb0a328b9d3477',1,'save_value_if_not_exists(const char *namespace, const char *key, uint32_t value):&#160;nvs.c'],['../nvs_8h.html#af90f1e6538ca4541e8fa61650199b172',1,'save_value_if_not_exists(const char *, const char *, uint32_t):&#160;nvs.c']]],
+  ['save_5fvalue_5fto_5fnvs_1',['save_value_to_nvs',['../nvs_8c.html#a21fdf4718b0ef6da2b9bd205aeefd9e6',1,'save_value_to_nvs(const char *namespace, const char *key, uint32_t value):&#160;nvs.c'],['../nvs_8h.html#af27bb81c7f2f3b19c91709e8cba09e5f',1,'save_value_to_nvs(const char *, const char *, uint32_t):&#160;nvs.c']]],
+  ['send_5fcb_2',['send_cb',['../wifi_8c.html#a24c1c9887da2b714d10ba3b3b0bc745c',1,'wifi.c']]],
+  ['set_5ftimer_3',['set_timer',['../timer_8c.html#a273e3782823154cdab417369080da910',1,'set_timer(uint64_t periodic_value):&#160;timer.c'],['../timer_8h.html#ae82142781372593ab513c7d7cb9405ce',1,'set_timer(uint64_t):&#160;timer.c']]]
 ];

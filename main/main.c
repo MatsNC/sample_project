@@ -10,7 +10,7 @@
    -Se agrega guardado en memoria de calibracion.
    -Se agrega cambio con pulsador BOOT
    -Se agregan modulos funcionales
- * 
+ *
  */
 
 #include "freertos/FreeRTOS.h"
@@ -33,6 +33,8 @@
 
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
+
+// #define MARMOL_TEST
 
 #define CALIB_STAGE_1 1
 #define CALIB_STAGE_2 2
@@ -673,6 +675,31 @@ void touch_read(void)
         }
     }
 
+/**
+ * @brief PRUEBA CON MARMOL
+ *
+ */
+#ifdef MARMOL_TEST
+    if ((filtered_Caudal_Down > filtered_Caudal_Down_Base * 1.013) || (filtered_Caudal_Up > filtered_Caudal_Up_Base * 1.013))
+    {
+        for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+        {
+            ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 255, 255, 255));
+            led_strip_refresh(led_strip);
+        }
+    }
+    // if ((filtered_Caudal_Down < filtered_Caudal_Down_Base * 1.012) || (filtered_Caudal_Up < filtered_Caudal_Up_Base * 1.012))
+    else
+    {
+        for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+        {
+            ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+            led_strip_refresh(led_strip);
+        }
+    }
+
+#endif
+
     // aca hacer una maquina de estados para la calibracion con toque
     switch (calib_stage)
     {
@@ -731,12 +758,6 @@ void touch_read(void)
         {
             printf("Calib stage 2 a 3\n");
             calib_stage = CALIB_STAGE_3;
-            // for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
-            // {
-            //     ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 255, 255, 255));
-            // }
-            // led_strip_refresh(led_strip);
-            // vTaskDelay(1000 / portTICK_PERIOD_MS);
 
             if ((!filtered_Caudal_Up_Touch_Validated) && (!filtered_Caudal_Down_Touch_Validated))
             {
@@ -1153,7 +1174,7 @@ static void I2C_task(void *pvParameters)
         ret = i2c_master_read_slave(data_received, sizeof(data_received));
         if (ret == ESP_OK)
         {
-            //ESP_LOGI(TAG_I2C, "Datos recibidos del esclavo: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
+            // ESP_LOGI(TAG_I2C, "Datos recibidos del esclavo: %02X %02X %02X", data_received[0], data_received[1], data_received[2]);
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay 1 segundo
     }

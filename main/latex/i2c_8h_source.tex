@@ -1,0 +1,45 @@
+\doxysection{i2c.\+h}
+\hypertarget{i2c_8h_source}{}\label{i2c_8h_source}\index{i2c/i2c.h@{i2c/i2c.h}}
+\mbox{\hyperlink{i2c_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ I2C\_H}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ I2C\_H}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}esp\_log.h"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}esp\_err.h"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}driver/i2c.h"{}}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_SCL\_IO\ 8\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ GPIO\ del\ ESP32-\/S3\ para\ SCL}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_SDA\_IO\ 3\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ GPIO\ del\ ESP32-\/S3\ para\ SDA}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ I2C\_SLAVE\_SCL\_IO\ 8\ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ GPIO\ del\ ESP32-\/S3\ para\ SCL\ SLAVE}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#define\ I2C\_SLAVE\_SDA\_IO\ 3\ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ GPIO\ del\ ESP32-\/S3\ para\ SDA\ SLAVE}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_NUM\ I2C\_NUM\_0\ \ \ \ }\textcolor{comment}{//\ I2C\ numero\ 0}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#define\ I2C\_SLAVE\_NUM\ I2C\_NUM\_0\ \ \ \ \ }\textcolor{comment}{//\ I2C\ Port\ 0\ para\ ESP32-\/C3}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_FREQ\_HZ\ 100000\ \ \ \ }}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_TX\_BUF\_DISABLE\ 0\ }}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_RX\_BUF\_DISABLE\ 0\ }}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#define\ I2C\_MASTER\_TIMEOUT\_MS\ 1000\ \ }\textcolor{comment}{//\ Timeout\ en\ ms}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#define\ I2C\_SLAVE\_ADDR\ 0x28\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Dirección\ I2C\ del\ esclavo}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#define\ ACK\_CHECK\_EN\ 0x1\ \ \ \ \ \ \ \ \ \ \ \ }}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#define\ ACK\_CHECK\_DIS\ 0x0\ \ \ \ \ \ \ \ \ \ \ }}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ ACK\_VAL\ 0x0\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#define\ NACK\_VAL\ 0x1\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ DATA\_LENGTH\ 3\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Tamaño\ de\ datos\ a\ enviar\ para\ slave}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{i2c_8h_a88fea12806646398a1ff6886bfa980c8}{TAG\_I2C}}\ =\ \textcolor{stringliteral}{"{}I2C\_MASTER"{}};}
+\DoxyCodeLine{00031\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{i2c_8h_ae8233f5539daf69695e317cf7f50ba10}{TAG\_I2C\_SLV}}\ =\ \textcolor{stringliteral}{"{}I2C\_SLAVE"{}};}
+\DoxyCodeLine{00032\ \textcolor{keyword}{static}\ uint8\_t\ \mbox{\hyperlink{i2c_8h_a4e6770bf669995a735edc3d00d1bd2a7}{slave\_data}}[\mbox{\hyperlink{i2c_8h_af0113b8a0d65aab384607436aa155838}{DATA\_LENGTH}}];\ \textcolor{comment}{//\ Buffer\ de\ datos\ del\ esclavo}}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ esp\_err\_t\ \mbox{\hyperlink{i2c_8h_adbeb61fe3c40b09ee1b6de91f21cb6ae}{i2c\_master\_init}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00035\ esp\_err\_t\ \mbox{\hyperlink{i2c_8h_a51cd060aa0933978dd48bbd17d67470b}{i2c\_master\_write\_slave}}(uint8\_t\ *,\ \textcolor{keywordtype}{size\_t});}
+\DoxyCodeLine{00036\ esp\_err\_t\ \mbox{\hyperlink{i2c_8h_aa238c3ec9985fa4fcdf01c3d29ef8a3b}{i2c\_master\_read\_slave}}(uint8\_t\ *,\ \textcolor{keywordtype}{size\_t});}
+\DoxyCodeLine{00037\ \textcolor{keyword}{static}\ esp\_err\_t\ \mbox{\hyperlink{i2c_8h_a2b543a4471fbbfff9a38819cf995f2f0}{i2c\_slave\_init}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00038\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{i2c_8h_a9672984c913ecc5dc584b230d5825420}{i2c\_slave\_read\_task}}(\textcolor{keywordtype}{void}\ *);}
+\DoxyCodeLine{00039\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{i2c_8h_aa774ecd17885921de1af24def3770ffd}{i2c\_slave\_write\_task}}(\textcolor{keywordtype}{void}\ *);}
+\DoxyCodeLine{00040\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{i2c_8h_a708d9278bbb6a16a21d8cf96670af55e}{i2c\_slave\_task\_start}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ I2C\_H}}
+
+\end{DoxyCode}

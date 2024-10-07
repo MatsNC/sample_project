@@ -1,0 +1,99 @@
+\doxysection{i2c/i2c\+\_\+master.c File Reference}
+\hypertarget{i2c__master_8c}{}\label{i2c__master_8c}\index{i2c/i2c\_master.c@{i2c/i2c\_master.c}}
+{\ttfamily \#include "{}i2c.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{i2c__master_8c_adbeb61fe3c40b09ee1b6de91f21cb6ae}{i2c\+\_\+master\+\_\+init}} (void)
+\begin{DoxyCompactList}\small\item\em Inicializa driver I2C. \end{DoxyCompactList}\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{i2c__master_8c_adaf939b7770e1c4c8a4528b05cef037d}{i2c\+\_\+master\+\_\+write\+\_\+slave}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}data, size\+\_\+t len)
+\begin{DoxyCompactList}\small\item\em Envía datos al esclavo a través de I2C. \end{DoxyCompactList}\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{i2c__master_8c_ad93e039c5ef6e0ef110913dab03a2a64}{i2c\+\_\+master\+\_\+read\+\_\+slave}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}data, size\+\_\+t len)
+\begin{DoxyCompactList}\small\item\em Lee datos del esclavo a través de I2C. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{i2c__master_8c_a5a85b9c772bbeb480b209a3e6ea92b4c}{TAG}} = "{}I2\+C\+\_\+\+MASTER"{}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{i2c__master_8c_adbeb61fe3c40b09ee1b6de91f21cb6ae}\index{i2c\_master.c@{i2c\_master.c}!i2c\_master\_init@{i2c\_master\_init}}
+\index{i2c\_master\_init@{i2c\_master\_init}!i2c\_master.c@{i2c\_master.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_master\_init()}{i2c\_master\_init()}}
+{\footnotesize\ttfamily \label{i2c__master_8c_adbeb61fe3c40b09ee1b6de91f21cb6ae} 
+esp\+\_\+err\+\_\+t i2c\+\_\+master\+\_\+init (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Inicializa driver I2C. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em none} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{i2c__master_8c_ad93e039c5ef6e0ef110913dab03a2a64}\index{i2c\_master.c@{i2c\_master.c}!i2c\_master\_read\_slave@{i2c\_master\_read\_slave}}
+\index{i2c\_master\_read\_slave@{i2c\_master\_read\_slave}!i2c\_master.c@{i2c\_master.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_master\_read\_slave()}{i2c\_master\_read\_slave()}}
+{\footnotesize\ttfamily \label{i2c__master_8c_ad93e039c5ef6e0ef110913dab03a2a64} 
+esp\+\_\+err\+\_\+t i2c\+\_\+master\+\_\+read\+\_\+slave (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{data}{, }\item[{size\+\_\+t}]{len}{}\end{DoxyParamCaption})}
+
+
+
+Lee datos del esclavo a través de I2C. 
+
+Esta función lee un array de bytes desde el esclavo utilizando la interfaz I2C.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ out}}  & {\em data} & Puntero al array donde se almacenarán los datos leídos. \\
+\hline
+\mbox{\texttt{ in}}  & {\em len} & Longitud del array de datos a leer. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item ESP\+\_\+\+OK si los datos fueron leídos exitosamente.
+\item Otro valor de error de {\ttfamily esp\+\_\+err\+\_\+t} si ocurrió un error durante la recepción. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\Hypertarget{i2c__master_8c_adaf939b7770e1c4c8a4528b05cef037d}\index{i2c\_master.c@{i2c\_master.c}!i2c\_master\_write\_slave@{i2c\_master\_write\_slave}}
+\index{i2c\_master\_write\_slave@{i2c\_master\_write\_slave}!i2c\_master.c@{i2c\_master.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_master\_write\_slave()}{i2c\_master\_write\_slave()}}
+{\footnotesize\ttfamily \label{i2c__master_8c_adaf939b7770e1c4c8a4528b05cef037d} 
+esp\+\_\+err\+\_\+t i2c\+\_\+master\+\_\+write\+\_\+slave (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{data}{, }\item[{size\+\_\+t}]{len}{}\end{DoxyParamCaption})}
+
+
+
+Envía datos al esclavo a través de I2C. 
+
+Esta función envía un array de bytes al esclavo utilizando la interfaz I2C.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em data} & Puntero al array de datos que se desea enviar. \\
+\hline
+\mbox{\texttt{ in}}  & {\em len} & Longitud del array de datos a enviar. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item ESP\+\_\+\+OK si los datos fueron enviados exitosamente.
+\item Otro valor de error de {\ttfamily esp\+\_\+err\+\_\+t} si ocurrió un error durante la transmisión. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{i2c__master_8c_a5a85b9c772bbeb480b209a3e6ea92b4c}\index{i2c\_master.c@{i2c\_master.c}!TAG@{TAG}}
+\index{TAG@{TAG}!i2c\_master.c@{i2c\_master.c}}
+\doxysubsubsection{\texorpdfstring{TAG}{TAG}}
+{\footnotesize\ttfamily \label{i2c__master_8c_a5a85b9c772bbeb480b209a3e6ea92b4c} 
+const char\texorpdfstring{$\ast$}{*} TAG = "{}I2\+C\+\_\+\+MASTER"{}\hspace{0.3cm}{\ttfamily [static]}}
+

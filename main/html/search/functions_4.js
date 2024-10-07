@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['out_5frelay_0',['out_relay',['../main_8c.html#af362463259552c8f38927606087eb30d',1,'main.c']]]
+  ['timer_5fcallback_0',['timer_callback',['../timer_8c.html#ad63135878d9d71623fdc526d5d80cb5d',1,'timer.c']]]
 ];

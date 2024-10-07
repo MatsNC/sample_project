@@ -1,0 +1,28 @@
+\doxysection{wifi.\+h}
+\hypertarget{wifi_8h_source}{}\label{wifi_8h_source}\index{wifi/wifi.h@{wifi/wifi.h}}
+\mbox{\hyperlink{wifi_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#include\ <stdio.h>}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <stdlib.h>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}esp\_log.h"{}}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}esp\_now.h"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}esp\_wifi.h"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}esp\_netif.h"{}}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}esp\_mac.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}esp\_event.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <string.h>}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{comment}{//\#define\ ESP\_NOW\_LOG}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#define\ ESP\_NOW}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{wifi_8h_ae5e5b7fb114f70b5a288cb0e51008a59}{wifi\_off}}\ =\ 1;}
+\DoxyCodeLine{00015\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{wifi_8h_a8dcd18acadba3e4db6d6e7ebb68fb3bd}{esp\_now\_off}}\ =\ 1;}
+\DoxyCodeLine{00016\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{wifi_8h_a863305affefdf189e3f788e81c56d183}{TAG\_WIFI}}\ =\ \textcolor{stringliteral}{"{}ESP\_NOW"{}};}
+\DoxyCodeLine{00017\ \textcolor{keyword}{static}\ uint8\_t\ \mbox{\hyperlink{wifi_8h_acdd95c9128e160955d799c4657f2e11c}{peer\_mac}}[ESP\_NOW\_ETH\_ALEN]\ =\ \{0x7c,\ 0xdf,\ 0xa1,\ 0x61,\ 0xb8,\ 0xf8\};}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ esp\_err\_t\ \mbox{\hyperlink{wifi_8h_a06d72697d1432a59b4c2856f8a5740ba}{init\_esp\_now}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00020\ esp\_err\_t\ \mbox{\hyperlink{wifi_8h_a48d63abb19ca5a56fac0296a823c84a4}{init\_wifi}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00021\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{wifi_8h_abe0a599c714ceb3130ab21820ee191d3}{deinit\_wifi}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00022\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{wifi_8h_abc6beb9364d0591de05d6ff18ea47dfe}{deinit\_esp\_now}}(\textcolor{keywordtype}{void});}
+
+\end{DoxyCode}

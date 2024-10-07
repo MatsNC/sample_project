@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['main_2ec_0',['main.c',['../main_8c.html',1,'']]],
-  ['max_5fpulse_5fduration_5fms_1',['MAX_PULSE_DURATION_MS',['../main_8c.html#a75a8a10fdb017b33ceedc533d14a2355',1,'main.c']]],
-  ['min_5fpulse_5fduration_5fms_2',['MIN_PULSE_DURATION_MS',['../main_8c.html#abe6aef46e4f943ddbdd8b0244a87cc86',1,'main.c']]]
+  ['webserver_2ec_0',['webserver.c',['../webserver_8c.html',1,'']]],
+  ['webserver_2eh_1',['webserver.h',['../webserver_8h.html',1,'']]],
+  ['wifi_2ec_2',['wifi.c',['../wifi_8c.html',1,'']]],
+  ['wifi_2eh_3',['wifi.h',['../wifi_8h.html',1,'']]],
+  ['wifi_5foff_4',['wifi_off',['../wifi_8h.html#ae5e5b7fb114f70b5a288cb0e51008a59',1,'wifi.h']]]
 ];

@@ -14,7 +14,7 @@
     "ESP_ROM_ELF_DIR": "c:\\Matias\\Espressif\\tools\\esp-rom-elfs\\20230320/"
   },
   "idf.gitPathWin": "c:\\Matias\\Espressif\\tools\\idf-git\\2.30.1\\cmd\\git.exe",
-  "idf.portWin": "COM24",
+  "idf.portWin": "COM28",
   "idf.flashType": "UART",
   "files.associations": {
     "led_strip.h": "c",
@@ -54,6 +54,7 @@
     "wifi.h": "c",
     "stdio.h": "c",
     "i2c.h": "c",
-    "esp_err.h": "c"
+    "esp_err.h": "c",
+    "led_strip_rmt.h": "c"
   }
 }

@@ -1,0 +1,137 @@
+\doxysection{wifi/wifi.h File Reference}
+\hypertarget{wifi_8h}{}\label{wifi_8h}\index{wifi/wifi.h@{wifi/wifi.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include "{}esp\+\_\+log.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+now.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+wifi.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+netif.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+mac.\+h"{}}\newline
+{\ttfamily \#include "{}esp\+\_\+event.\+h"{}}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{wifi_8h_a2dced944dc9647a85799d331b0aec8c9}{ESP\+\_\+\+NOW}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{wifi_8h_a06d72697d1432a59b4c2856f8a5740ba}{init\+\_\+esp\+\_\+now}} (void)
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{wifi_8h_a48d63abb19ca5a56fac0296a823c84a4}{init\+\_\+wifi}} (void)
+\begin{DoxyCompactList}\small\item\em Funcion que inicializa WIFI. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wifi_8h_abe0a599c714ceb3130ab21820ee191d3}{deinit\+\_\+wifi}} (void)
+\begin{DoxyCompactList}\small\item\em Funcion que apaga WIFI. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wifi_8h_abc6beb9364d0591de05d6ff18ea47dfe}{deinit\+\_\+esp\+\_\+now}} (void)
+\begin{DoxyCompactList}\small\item\em Funcion que apaga ESP\+\_\+\+NOW. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static bool \mbox{\hyperlink{wifi_8h_ae5e5b7fb114f70b5a288cb0e51008a59}{wifi\+\_\+off}} = 1
+\item 
+static bool \mbox{\hyperlink{wifi_8h_a8dcd18acadba3e4db6d6e7ebb68fb3bd}{esp\+\_\+now\+\_\+off}} = 1
+\item 
+static const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{wifi_8h_a863305affefdf189e3f788e81c56d183}{TAG\+\_\+\+WIFI}} = "{}ESP\+\_\+\+NOW"{}
+\item 
+static uint8\+\_\+t \mbox{\hyperlink{wifi_8h_acdd95c9128e160955d799c4657f2e11c}{peer\+\_\+mac}} \mbox{[}ESP\+\_\+\+NOW\+\_\+\+ETH\+\_\+\+ALEN\mbox{]} = \{0x7c, 0xdf, 0xa1, 0x61, 0xb8, 0xf8\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{wifi_8h_a2dced944dc9647a85799d331b0aec8c9}\index{wifi.h@{wifi.h}!ESP\_NOW@{ESP\_NOW}}
+\index{ESP\_NOW@{ESP\_NOW}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{ESP\_NOW}{ESP\_NOW}}
+{\footnotesize\ttfamily \label{wifi_8h_a2dced944dc9647a85799d331b0aec8c9} 
+\#define ESP\+\_\+\+NOW}
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{wifi_8h_abc6beb9364d0591de05d6ff18ea47dfe}\index{wifi.h@{wifi.h}!deinit\_esp\_now@{deinit\_esp\_now}}
+\index{deinit\_esp\_now@{deinit\_esp\_now}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{deinit\_esp\_now()}{deinit\_esp\_now()}}
+{\footnotesize\ttfamily \label{wifi_8h_abc6beb9364d0591de05d6ff18ea47dfe} 
+void deinit\+\_\+esp\+\_\+now (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que apaga ESP\+\_\+\+NOW. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{wifi_8h_abe0a599c714ceb3130ab21820ee191d3}\index{wifi.h@{wifi.h}!deinit\_wifi@{deinit\_wifi}}
+\index{deinit\_wifi@{deinit\_wifi}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{deinit\_wifi()}{deinit\_wifi()}}
+{\footnotesize\ttfamily \label{wifi_8h_abe0a599c714ceb3130ab21820ee191d3} 
+void deinit\+\_\+wifi (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que apaga WIFI. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{wifi_8h_a06d72697d1432a59b4c2856f8a5740ba}\index{wifi.h@{wifi.h}!init\_esp\_now@{init\_esp\_now}}
+\index{init\_esp\_now@{init\_esp\_now}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{init\_esp\_now()}{init\_esp\_now()}}
+{\footnotesize\ttfamily \label{wifi_8h_a06d72697d1432a59b4c2856f8a5740ba} 
+esp\+\_\+err\+\_\+t init\+\_\+esp\+\_\+now (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{wifi_8h_a48d63abb19ca5a56fac0296a823c84a4}\index{wifi.h@{wifi.h}!init\_wifi@{init\_wifi}}
+\index{init\_wifi@{init\_wifi}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{init\_wifi()}{init\_wifi()}}
+{\footnotesize\ttfamily \label{wifi_8h_a48d63abb19ca5a56fac0296a823c84a4} 
+esp\+\_\+err\+\_\+t init\+\_\+wifi (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que inicializa WIFI. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t Estado de la operacion (ESP\+\_\+\+OK si todo fue bien, ESP\+\_\+\+FAIL si hubo algun problema) 
+\end{DoxyReturn}
+
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{wifi_8h_a8dcd18acadba3e4db6d6e7ebb68fb3bd}\index{wifi.h@{wifi.h}!esp\_now\_off@{esp\_now\_off}}
+\index{esp\_now\_off@{esp\_now\_off}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{esp\_now\_off}{esp\_now\_off}}
+{\footnotesize\ttfamily \label{wifi_8h_a8dcd18acadba3e4db6d6e7ebb68fb3bd} 
+bool esp\+\_\+now\+\_\+off = 1\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{wifi_8h_acdd95c9128e160955d799c4657f2e11c}\index{wifi.h@{wifi.h}!peer\_mac@{peer\_mac}}
+\index{peer\_mac@{peer\_mac}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{peer\_mac}{peer\_mac}}
+{\footnotesize\ttfamily \label{wifi_8h_acdd95c9128e160955d799c4657f2e11c} 
+uint8\+\_\+t peer\+\_\+mac\mbox{[}ESP\+\_\+\+NOW\+\_\+\+ETH\+\_\+\+ALEN\mbox{]} = \{0x7c, 0xdf, 0xa1, 0x61, 0xb8, 0xf8\}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{wifi_8h_a863305affefdf189e3f788e81c56d183}\index{wifi.h@{wifi.h}!TAG\_WIFI@{TAG\_WIFI}}
+\index{TAG\_WIFI@{TAG\_WIFI}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{TAG\_WIFI}{TAG\_WIFI}}
+{\footnotesize\ttfamily \label{wifi_8h_a863305affefdf189e3f788e81c56d183} 
+const char\texorpdfstring{$\ast$}{*} TAG\+\_\+\+WIFI = "{}ESP\+\_\+\+NOW"{}\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{wifi_8h_ae5e5b7fb114f70b5a288cb0e51008a59}\index{wifi.h@{wifi.h}!wifi\_off@{wifi\_off}}
+\index{wifi\_off@{wifi\_off}!wifi.h@{wifi.h}}
+\doxysubsubsection{\texorpdfstring{wifi\_off}{wifi\_off}}
+{\footnotesize\ttfamily \label{wifi_8h_ae5e5b7fb114f70b5a288cb0e51008a59} 
+bool wifi\+\_\+off = 1\hspace{0.3cm}{\ttfamily [static]}}
+

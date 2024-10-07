@@ -1,0 +1,85 @@
+\doxysection{wifi/wifi.c File Reference}
+\hypertarget{wifi_8c}{}\label{wifi_8c}\index{wifi/wifi.c@{wifi/wifi.c}}
+{\ttfamily \#include "{}wifi.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{wifi_8c_a24c1c9887da2b714d10ba3b3b0bc745c}{send\+\_\+cb}} (const uint8\+\_\+t \texorpdfstring{$\ast$}{*}mac\+\_\+addr, esp\+\_\+now\+\_\+send\+\_\+status\+\_\+t status)
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{wifi_8c_a30f8c9ab391b5d256649faf4b56fda87}{init\+\_\+esp\+\_\+now}} ()
+\item 
+esp\+\_\+err\+\_\+t \mbox{\hyperlink{wifi_8c_aaf011d2a4d19b32db4b0c142e58e9c40}{init\+\_\+wifi}} ()
+\begin{DoxyCompactList}\small\item\em Funcion que inicializa WIFI. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wifi_8c_a54834c057f0b3217adaf58823b197174}{deinit\+\_\+wifi}} ()
+\begin{DoxyCompactList}\small\item\em Funcion que apaga WIFI. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wifi_8c_aa1486abdc435a329ef79eb44920a99e9}{deinit\+\_\+esp\+\_\+now}} ()
+\begin{DoxyCompactList}\small\item\em Funcion que apaga ESP\+\_\+\+NOW. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{wifi_8c_aa1486abdc435a329ef79eb44920a99e9}\index{wifi.c@{wifi.c}!deinit\_esp\_now@{deinit\_esp\_now}}
+\index{deinit\_esp\_now@{deinit\_esp\_now}!wifi.c@{wifi.c}}
+\doxysubsubsection{\texorpdfstring{deinit\_esp\_now()}{deinit\_esp\_now()}}
+{\footnotesize\ttfamily \label{wifi_8c_aa1486abdc435a329ef79eb44920a99e9} 
+void deinit\+\_\+esp\+\_\+now (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que apaga ESP\+\_\+\+NOW. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{wifi_8c_a54834c057f0b3217adaf58823b197174}\index{wifi.c@{wifi.c}!deinit\_wifi@{deinit\_wifi}}
+\index{deinit\_wifi@{deinit\_wifi}!wifi.c@{wifi.c}}
+\doxysubsubsection{\texorpdfstring{deinit\_wifi()}{deinit\_wifi()}}
+{\footnotesize\ttfamily \label{wifi_8c_a54834c057f0b3217adaf58823b197174} 
+void deinit\+\_\+wifi (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que apaga WIFI. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\Hypertarget{wifi_8c_a30f8c9ab391b5d256649faf4b56fda87}\index{wifi.c@{wifi.c}!init\_esp\_now@{init\_esp\_now}}
+\index{init\_esp\_now@{init\_esp\_now}!wifi.c@{wifi.c}}
+\doxysubsubsection{\texorpdfstring{init\_esp\_now()}{init\_esp\_now()}}
+{\footnotesize\ttfamily \label{wifi_8c_a30f8c9ab391b5d256649faf4b56fda87} 
+esp\+\_\+err\+\_\+t init\+\_\+esp\+\_\+now (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{wifi_8c_aaf011d2a4d19b32db4b0c142e58e9c40}\index{wifi.c@{wifi.c}!init\_wifi@{init\_wifi}}
+\index{init\_wifi@{init\_wifi}!wifi.c@{wifi.c}}
+\doxysubsubsection{\texorpdfstring{init\_wifi()}{init\_wifi()}}
+{\footnotesize\ttfamily \label{wifi_8c_aaf011d2a4d19b32db4b0c142e58e9c40} 
+esp\+\_\+err\+\_\+t init\+\_\+wifi (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que inicializa WIFI. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+esp\+\_\+err\+\_\+t Estado de la operacion (ESP\+\_\+\+OK si todo fue bien, ESP\+\_\+\+FAIL si hubo algun problema) 
+\end{DoxyReturn}
+\Hypertarget{wifi_8c_a24c1c9887da2b714d10ba3b3b0bc745c}\index{wifi.c@{wifi.c}!send\_cb@{send\_cb}}
+\index{send\_cb@{send\_cb}!wifi.c@{wifi.c}}
+\doxysubsubsection{\texorpdfstring{send\_cb()}{send\_cb()}}
+{\footnotesize\ttfamily \label{wifi_8c_a24c1c9887da2b714d10ba3b3b0bc745c} 
+void send\+\_\+cb (\begin{DoxyParamCaption}\item[{const uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{mac\+\_\+addr}{, }\item[{esp\+\_\+now\+\_\+send\+\_\+status\+\_\+t}]{status}{}\end{DoxyParamCaption})}
+

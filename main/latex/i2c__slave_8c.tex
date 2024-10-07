@@ -1,0 +1,58 @@
+\doxysection{i2c/i2c\+\_\+slave.c File Reference}
+\hypertarget{i2c__slave_8c}{}\label{i2c__slave_8c}\index{i2c/i2c\_slave.c@{i2c/i2c\_slave.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include "{}i2c.\+h"{}}\newline
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static esp\+\_\+err\+\_\+t \mbox{\hyperlink{i2c__slave_8c_a2b543a4471fbbfff9a38819cf995f2f0}{i2c\+\_\+slave\+\_\+init}} (void)
+\begin{DoxyCompactList}\small\item\em Inicialización del puerto I2C slave. \end{DoxyCompactList}\item 
+static void \mbox{\hyperlink{i2c__slave_8c_a958b8d6c7c843983641dc5ac772dd649}{i2c\+\_\+slave\+\_\+read\+\_\+task}} (void \texorpdfstring{$\ast$}{*}arg)
+\begin{DoxyCompactList}\small\item\em Función para recibir datos del maestro. \end{DoxyCompactList}\item 
+static void \mbox{\hyperlink{i2c__slave_8c_aec2b0cac5a73d6197861b62d9bfb6a88}{i2c\+\_\+slave\+\_\+write\+\_\+task}} (void \texorpdfstring{$\ast$}{*}arg)
+\begin{DoxyCompactList}\small\item\em Función para enviar los datos almacenados al maestro. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{i2c__slave_8c_a708d9278bbb6a16a21d8cf96670af55e}{i2c\+\_\+slave\+\_\+task\+\_\+start}} (void)
+\begin{DoxyCompactList}\small\item\em Funcion que inicializa el driver I2C Slave y crea las task de escritura y lectura. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{i2c__slave_8c_a2b543a4471fbbfff9a38819cf995f2f0}\index{i2c\_slave.c@{i2c\_slave.c}!i2c\_slave\_init@{i2c\_slave\_init}}
+\index{i2c\_slave\_init@{i2c\_slave\_init}!i2c\_slave.c@{i2c\_slave.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_slave\_init()}{i2c\_slave\_init()}}
+{\footnotesize\ttfamily \label{i2c__slave_8c_a2b543a4471fbbfff9a38819cf995f2f0} 
+static esp\+\_\+err\+\_\+t i2c\+\_\+slave\+\_\+init (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Inicialización del puerto I2C slave. 
+
+\Hypertarget{i2c__slave_8c_a958b8d6c7c843983641dc5ac772dd649}\index{i2c\_slave.c@{i2c\_slave.c}!i2c\_slave\_read\_task@{i2c\_slave\_read\_task}}
+\index{i2c\_slave\_read\_task@{i2c\_slave\_read\_task}!i2c\_slave.c@{i2c\_slave.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_slave\_read\_task()}{i2c\_slave\_read\_task()}}
+{\footnotesize\ttfamily \label{i2c__slave_8c_a958b8d6c7c843983641dc5ac772dd649} 
+static void i2c\+\_\+slave\+\_\+read\+\_\+task (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{arg}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Función para recibir datos del maestro. 
+
+\Hypertarget{i2c__slave_8c_a708d9278bbb6a16a21d8cf96670af55e}\index{i2c\_slave.c@{i2c\_slave.c}!i2c\_slave\_task\_start@{i2c\_slave\_task\_start}}
+\index{i2c\_slave\_task\_start@{i2c\_slave\_task\_start}!i2c\_slave.c@{i2c\_slave.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_slave\_task\_start()}{i2c\_slave\_task\_start()}}
+{\footnotesize\ttfamily \label{i2c__slave_8c_a708d9278bbb6a16a21d8cf96670af55e} 
+void i2c\+\_\+slave\+\_\+task\+\_\+start (\begin{DoxyParamCaption}\item[{void}]{}{}\end{DoxyParamCaption})}
+
+
+
+Funcion que inicializa el driver I2C Slave y crea las task de escritura y lectura. 
+
+\Hypertarget{i2c__slave_8c_aec2b0cac5a73d6197861b62d9bfb6a88}\index{i2c\_slave.c@{i2c\_slave.c}!i2c\_slave\_write\_task@{i2c\_slave\_write\_task}}
+\index{i2c\_slave\_write\_task@{i2c\_slave\_write\_task}!i2c\_slave.c@{i2c\_slave.c}}
+\doxysubsubsection{\texorpdfstring{i2c\_slave\_write\_task()}{i2c\_slave\_write\_task()}}
+{\footnotesize\ttfamily \label{i2c__slave_8c_aec2b0cac5a73d6197861b62d9bfb6a88} 
+static void i2c\+\_\+slave\+\_\+write\+\_\+task (\begin{DoxyParamCaption}\item[{void \texorpdfstring{$\ast$}{*}}]{arg}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Función para enviar los datos almacenados al maestro. 
+

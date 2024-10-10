@@ -34,6 +34,13 @@
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
 
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_BLUE "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+
 // #define MARMOL_TEST
 
 #define CALIB_STAGE_1 1
@@ -47,10 +54,14 @@
 #define LED_STRIP 38
 #endif
 
-#define Touch_Nivel TOUCH_PAD_NUM4
-#define Touch_Fuga TOUCH_PAD_NUM5
-#define Touch_Caudal_Sube TOUCH_PAD_NUM1
-#define Touch_Caudal_Baja TOUCH_PAD_NUM2
+// #define Touch_Nivel TOUCH_PAD_NUM4
+// #define Touch_Fuga TOUCH_PAD_NUM5
+// #define Touch_Caudal_Sube TOUCH_PAD_NUM1
+// #define Touch_Caudal_Baja TOUCH_PAD_NUM2
+#define Touch_Nivel TOUCH_PAD_NUM5
+#define Touch_Fuga TOUCH_PAD_NUM4
+#define Touch_Caudal_Sube TOUCH_PAD_NUM2
+#define Touch_Caudal_Baja TOUCH_PAD_NUM1
 #define Touch_ON TOUCH_PAD_NUM7
 // #define adc_caliente ADC1_CHANNEL_7
 #define adc_fria ADC1_CHANNEL_5
@@ -64,9 +75,9 @@
 #define Salida_Resistencia 15
 #define PIN_SWITCH 0
 
-#define Salida_EV1 37
-#define Salida_EV2 36
-#define Salida_EV3 35
+#define Salida_EV1 42
+#define Salida_EV2 41
+#define Salida_EV3 21
 #define Salida_EV4 45
 #define Salida_EV5 48
 #define Salida_EV6 47
@@ -103,6 +114,13 @@ typedef enum
     TOUCH_PAD_ATTEN_VOLTAGE2,
 } touch_config_state_t;
 
+typedef enum
+{
+    WAIT_TOUCH_ON,
+    TOUCH_ON_PRESSED,
+    TOUCH_ON_RELEASED,
+} touch_on_state_t;
+
 //-----------Definicion de variables----------------
 
 bool B_Fria_Up = 0;
@@ -114,7 +132,7 @@ bool B_Resistencia = 0;
 bool B_Compresor = 0;
 bool B_Cooler = 0;
 bool B_Electrovalvula_CO2 = 0;
-bool first_on = 0; // cambiar por 1 despues
+bool first_on; // cambiar por 1 despues
 bool init_calib_stage = false;
 bool once = 0;
 bool set_dir = 1;
@@ -134,13 +152,17 @@ bool EV6 = 0;
 static touch_state_t touch_state = WAIT_FOR_TOUCH;
 static touch_config_state_t touch_config_state = TOUCH_PAD_ATTEN_VOLTAGE1;
 
+touch_on_state_t touch_on_state;
+
 static int64_t touch_start_time = 0;
 static int64_t touch_duration = 0;
 static const int64_t MIN_PULSE_DURATION_MS = 50;   // Tiempo mínimo del toque
 static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
 
-float b_perc = 0.5;
-float r_perc = 0.5;
+float b_perc = 0.3;
+float r_perc = 0.3;
+float b_perc_ev = 0.3;
+float r_perc_ev = 0.3;
 
 float r = 255 * 0.5;
 float b = 255 * 0.5;
@@ -162,6 +184,7 @@ uint32_t filtered_Nivel;
 uint32_t filtered_Fuga;
 uint32_t filtered_Caudal_Up;
 uint32_t filtered_Caudal_Down;
+uint32_t filtered_Touch_ON;
 
 // valores base:
 uint32_t filtered_Caudal_Down_Base;
@@ -175,7 +198,7 @@ uint32_t filtered_Caudal_Up_Touch;
 uint32_t filtered_Caudal_Down_Touch;
 uint32_t filtered_Nivel_Base_Touch;
 uint32_t filtered_Fuga_Base_Touch;
-uint32_t filtered_Touch_ON;
+uint32_t filtered_ON_Touch;
 
 // valores anteriores (para ver si se bloquean las entradas):
 uint32_t filtered_Nivel_Ant;
@@ -204,7 +227,7 @@ uint32_t filtered_Caudal_Up_Touch_Validated = 0;
 //----------------------------------------------------------------
 
 uint8_t calib = 100;
-uint8_t on_off_debounce = 20;
+uint8_t on_off_debounce = 2;
 
 float caudal = 0.6;
 
@@ -217,6 +240,9 @@ uint32_t count_mot_off = 100;
 
 uint32_t cal_filt_up_nvs;
 uint32_t cal_filt_dwn_nvs;
+uint32_t cal_filt_nivel_nvs;
+uint32_t cal_filt_fuga_nvs;
+uint32_t cal_filt_on_nvs;
 
 TimeOut_t xTimeOut;
 TickType_t xTicksToWait;
@@ -276,7 +302,7 @@ int eval_touch_in()
     B_Fria_Down = 1;
     B_Fria_Up = 1; // Setea estas variables en los valores correspondientes a la no detección de toque
 
-    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up) && (filtered_Caudal_Down > 2.5 * filtered_Caudal_Down_Base))
+    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up) && (filtered_Caudal_Down > 2 * filtered_Caudal_Down_Base))
     // if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
     {
         touch_act_detect = 1;
@@ -285,7 +311,7 @@ int eval_touch_in()
         filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
     }
 
-    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down) && (filtered_Caudal_Up > 2.5 * filtered_Caudal_Up_Base))
+    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down) && (filtered_Caudal_Up > 2 * filtered_Caudal_Up_Base))
     // if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
     {
         touch_act_detect = 3;
@@ -294,6 +320,27 @@ int eval_touch_in()
         filtered_Caudal_Up_Touch_toValidate = filtered_Caudal_Up; // Debo validar si el toque es valido
     }
 
+    //==================================== aca va la deteccion para nivel y fuga ==========================//
+
+    if ((filtered_Nivel > filtered_Nivel_Touch_Validated * 0.5) /*1.03*/ && (filtered_Nivel > filtered_Fuga) && (filtered_Nivel > 2 * filtered_Nivel_Base))
+    // if (filtered_Nivel > 1.1 * filtered_Nivel_Base)
+    {
+        touch_act_detect = 2;
+        // printf("touch 1 detection\n");
+        ESP_LOGI(TAG3, "touch 2 detection\n");
+        filtered_Nivel_Touch_toValidate = filtered_Nivel; // Debo validar si el toque es valido
+    }
+
+    if ((filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5) /*1.03*/ && (filtered_Fuga > filtered_Nivel) && (filtered_Fuga > 2 * filtered_Fuga_Base))
+    // if (filtered_Fuga > 1.1 * filtered_Fuga_Base)
+    {
+        touch_act_detect = 4;
+        // printf("touch 3 detection\n");
+        ESP_LOGI(TAG3, "touch 4 detection\n");
+        filtered_Fuga_Touch_toValidate = filtered_Fuga; // Debo validar si el toque es valido
+    }
+
+    //==============================================================//
     return touch_act_detect;
 }
 
@@ -324,54 +371,174 @@ static esp_err_t init_led_strip(void)
     return ESP_OK;
 }
 
-void valve_outputs(void)
+/**
+ * @brief Funcion para calibrar las entradas capacitivas
+ *
+ */
+
+void calib_cap_inputs(void)
 {
-#ifndef VALV_MODUL
-    if (b_perc >= 0 && b_perc < 0.1)
+    if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
     {
-        EV4 = 1;
-        EV5 = 0;
-        EV6 = 0;
-        // gpio_set_level(Salida_EV4, 1);
-        // printf("Output_45=%d\n",gpio_get_level(Salida_EV4));
-    }
-    if (b_perc >= 0.1 && b_perc < 0.2)
-    {
-        EV4 = 0;
-        EV5 = 1;
-        EV6 = 0;
-    }
-    if (b_perc >= 0.2 && b_perc < 0.3)
-    {
-        EV4 = 1;
-        EV5 = 1;
-        EV6 = 0;
-    }
-    if (b_perc >= 0.3 && b_perc < 0.4)
-    {
-        EV4 = 0;
-        EV5 = 0;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.4 && b_perc < 0.5)
-    {
-        EV4 = 1;
-        EV5 = 0;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.5 && b_perc < 0.6)
-    {
-        EV4 = 0;
-        EV5 = 1;
-        EV6 = 1;
-    }
-    if (b_perc >= 0.6 && b_perc < 0.7)
-    {
-        EV4 = 1;
-        EV5 = 1;
-        EV6 = 1;
+        filtered_Caudal_Down_Touch = filtered_Caudal_Down;
+        filtered_Caudal_Down_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Down_Touch);
+        printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch_Validated);
     }
 
+    if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
+    {
+        filtered_Caudal_Up_Touch = filtered_Caudal_Up;
+        filtered_Caudal_Up_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Up_Touch);
+        printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch_Validated);
+    }
+
+    if (filtered_Nivel > 1.1 * filtered_Nivel_Base)
+    {
+        filtered_Nivel_Base_Touch = filtered_Nivel;
+        filtered_Nivel_Touch_Validated = (uint32_t)(0.9 * filtered_Nivel_Base_Touch);
+        printf("touch 1 base = %ld\n ", filtered_Nivel_Touch_Validated);
+    }
+
+    if (filtered_Fuga > 1.1 * filtered_Fuga_Base)
+    {
+        filtered_Fuga_Base_Touch = filtered_Fuga;
+        filtered_Fuga_Touch_Validated = (uint32_t)(0.9 * filtered_Fuga_Base_Touch);
+        printf("touch 3 base = %ld\n ", filtered_Fuga_Touch_Validated);
+    }
+    if (filtered_Touch_ON > 1.5 * filtered_Touch_ON_Base)
+    {
+        filtered_ON_Touch = (uint32_t)(0.9 * filtered_Touch_ON);
+    }
+}
+
+void valve_outputs(void)
+{
+
+#ifndef VALV_MODUL
+    if (!first_on)
+    {
+        if (b_perc < 0.1)
+        {
+            EV1 = 0;
+            EV2 = 0;
+            EV3 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold off" ANSI_COLOR_RESET "\n");
+        }
+        // if (b_perc > 0 && b_perc < 0.1)
+        // {
+        //     EV1 = 1;
+        //     EV2 = 0;
+        //     EV3 = 0;
+        // }
+        if (b_perc >= 0.1 && b_perc < 0.2)
+        {
+            EV1 = 0;
+            EV2 = 1;
+            EV3 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold min" ANSI_COLOR_RESET "\n");
+        }
+        if (b_perc >= 0.2 && b_perc < 0.3)
+        {
+            EV1 = 1;
+            EV2 = 1;
+            EV3 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold 2" ANSI_COLOR_RESET "\n");
+        }
+        if (b_perc >= 0.3 && b_perc < 0.4)
+        {
+            EV1 = 0;
+            EV2 = 0;
+            EV3 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold 3" ANSI_COLOR_RESET "\n");
+        }
+        if (b_perc >= 0.4 && b_perc < 0.5)
+        {
+            EV1 = 1;
+            EV2 = 0;
+            EV3 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold 4" ANSI_COLOR_RESET "\n");
+        }
+        if (b_perc >= 0.5 && b_perc < 0.6)
+        {
+            EV1 = 0;
+            EV2 = 1;
+            EV3 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold 5" ANSI_COLOR_RESET "\n");
+        }
+        if (b_perc >= 0.6)
+        {
+            EV1 = 1;
+            EV2 = 1;
+            EV3 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold max" ANSI_COLOR_RESET "\n");
+        }
+        /////////////////////////////////////////
+        if (r_perc < 0.1)
+        {
+            EV4 = 0;
+            EV5 = 0;
+            EV6 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot off" ANSI_COLOR_RESET "\n");
+        }
+        // if (r_perc > 0 && r_perc < 0.1)
+        // {
+        //     EV4 = 1;
+        //     EV5 = 0;
+        //     EV6 = 0;
+        // }
+        if (r_perc >= 0.1 && r_perc < 0.2)
+        {
+            EV4 = 0;
+            EV5 = 1;
+            EV6 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot min" ANSI_COLOR_RESET "\n");
+        }
+        if (r_perc >= 0.2 && r_perc < 0.3)
+        {
+            EV4 = 1;
+            EV5 = 1;
+            EV6 = 0;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot 2" ANSI_COLOR_RESET "\n");
+        }
+        if (r_perc >= 0.3 && r_perc < 0.4)
+        {
+            EV4 = 0;
+            EV5 = 0;
+            EV6 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot 3" ANSI_COLOR_RESET "\n");
+        }
+        if (r_perc >= 0.4 && r_perc < 0.5)
+        {
+            EV4 = 1;
+            EV5 = 0;
+            EV6 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot 4" ANSI_COLOR_RESET "\n");
+        }
+        if (r_perc >= 0.5 && r_perc < 0.6)
+        {
+            EV4 = 0;
+            EV5 = 1;
+            EV6 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot 5" ANSI_COLOR_RESET "\n");
+        }
+        if (r_perc >= 0.6)
+        {
+            EV4 = 1;
+            EV5 = 1;
+            EV6 = 1;
+            // ESP_LOGI("EV", ANSI_COLOR_RED "hot max" ANSI_COLOR_RESET "\n");
+        }
+    }
+    else
+    {
+        EV1 = 0;
+        EV2 = 0;
+        EV3 = 0;
+        EV4 = 0;
+        EV5 = 0;
+        EV6 = 0;
+        // ESP_LOGI("EV", ANSI_COLOR_GREEN "all off" ANSI_COLOR_RESET "\n");
+    }
 #endif
 }
 
@@ -417,6 +584,7 @@ void press_proccess(void)
                 cont_pin_pressed++;
                 if (r_perc < 1 && b_perc > 0)
                 {
+                    r_perc += 0.1;
                     r_perc += 0.1;
                     b_perc -= 0.1;
                     r = r_perc * 255;
@@ -469,8 +637,9 @@ void app_main()
     ESP_ERROR_CHECK(init_wifi());
     ESP_ERROR_CHECK(init_esp_now());
     ESP_ERROR_CHECK(init_led_strip());
-    ESP_ERROR_CHECK(i2c_master_init());
-    i2c_task_func();
+    // ESP_ERROR_CHECK(i2c_master_init());
+    // i2c_task_func();
+    first_on = 1;
 
     while (1)
     {
@@ -518,6 +687,12 @@ void inicio_hw(void)
 
     gpio_set_direction(PIN_SWITCH, GPIO_MODE_INPUT);
     gpio_pullup_en(PIN_SWITCH);
+    gpio_reset_pin(Salida_EV1);
+    gpio_reset_pin(Salida_EV2);
+    gpio_reset_pin(Salida_EV3);
+    gpio_set_direction(Salida_EV1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(Salida_EV2, GPIO_MODE_DEF_OUTPUT);
+    gpio_set_direction(Salida_EV3, GPIO_MODE_DEF_OUTPUT);
     gpio_set_direction(Salida_EV4, GPIO_MODE_DEF_OUTPUT);
     gpio_set_direction(Salida_EV5, GPIO_MODE_DEF_OUTPUT);
     gpio_set_direction(Salida_EV6, GPIO_MODE_DEF_OUTPUT);
@@ -631,28 +806,31 @@ void touch_read(void)
             //         esp_restart();
             //     }
             // }
-            printf("------Nivel-------\n");
-            printf("touch 1 = %ld\n ", filtered_Caudal_Down);
-            printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Base);
-            printf("touch 1 th = %ld\n ", filtered_Caudal_Down_Touch_Validated);
-            // printf("touch 2 = %ld\n ", filtered_Nivel);
-            printf("touch 3 = %ld\n ", filtered_Caudal_Up);
-            printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Base);
-            printf("touch 3 th = %ld\n ", filtered_Caudal_Up_Touch_Validated);
-            // printf("touch 4 = %ld\n ", filtered_Fuga);
-            // printf("touch on = %ld\n ", filtered_Touch_ON);
-            // printf("touch on base = %ld\n ", filtered_Touch_ON_Base);
+            // ESP_LOGI("TOUCH 1", ANSI_COLOR_RED "touch 1 = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Down);
+            // ESP_LOGI("TOUCH 1", ANSI_COLOR_RED "touch 1 base = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Down_Base);
+            // ESP_LOGI("TOUCH 1", ANSI_COLOR_RED "touch 1 th = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Down_Touch_Validated);
+
+            // ESP_LOGI("TOUCH 2", ANSI_COLOR_GREEN "touch 2 = %ld" ANSI_COLOR_RESET "\n", filtered_Nivel);
+            // ESP_LOGI("TOUCH 2", ANSI_COLOR_GREEN "touch 2 base = %ld" ANSI_COLOR_RESET "\n", filtered_Nivel_Base);
+            // ESP_LOGI("TOUCH 2", ANSI_COLOR_GREEN "touch 2 th = %ld" ANSI_COLOR_RESET "\n", filtered_Nivel_Touch_Validated);
+
+            // ESP_LOGI("TOUCH 3", ANSI_COLOR_BLUE "touch 3 = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
+            // ESP_LOGI("TOUCH 3", ANSI_COLOR_BLUE "touch 3 base = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Base);
+            // ESP_LOGI("TOUCH 3", ANSI_COLOR_BLUE "touch 3 th = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated);
+
+            // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga);
+            // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 base = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Base);
+            // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 th = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Touch_Validated);
+
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
+
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
             touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down_Ant);
             touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up_Ant);
 
 #ifdef ESP_NOW
-            // if (wifi_off && esp_now_off)
-            // {
-            //     init_wifi();
-            //     init_esp_now();
-            // }
             esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
             if (send_result == ESP_OK)
             {
@@ -671,6 +849,8 @@ void touch_read(void)
             {
                 ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
             }
+            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Nivel, sizeof(filtered_Nivel));
+            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Fuga, sizeof(filtered_Fuga));
 #endif
         }
     }
@@ -721,7 +901,9 @@ void touch_read(void)
         filtered_Caudal_Up_Base = filtered_Caudal_Up;
         printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Base);
         filtered_Nivel_Base = filtered_Nivel;
+        printf("touch 2 base = %ld\n ", filtered_Nivel_Base);
         filtered_Fuga_Base = filtered_Fuga;
+        printf("touch 4 base = %ld\n ", filtered_Fuga_Base);
         filtered_Touch_ON_Base = filtered_Touch_ON;
         if (xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) != pdFALSE)
         {
@@ -739,19 +921,7 @@ void touch_read(void)
         }
         led_strip_refresh(led_strip);
 
-        if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
-        {
-            filtered_Caudal_Down_Touch = filtered_Caudal_Down;
-            filtered_Caudal_Down_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Down_Touch);
-            printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch_Validated);
-        }
-
-        if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
-        {
-            filtered_Caudal_Up_Touch = filtered_Caudal_Up;
-            filtered_Caudal_Up_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Up_Touch);
-            printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch_Validated);
-        }
+        calib_cap_inputs();
 
         // vTaskDelay(1000 / portTICK_PERIOD_MS);
         if (xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) != pdFALSE)
@@ -759,7 +929,7 @@ void touch_read(void)
             printf("Calib stage 2 a 3\n");
             calib_stage = CALIB_STAGE_3;
 
-            if ((!filtered_Caudal_Up_Touch_Validated) && (!filtered_Caudal_Down_Touch_Validated))
+            if ((!filtered_Caudal_Up_Touch_Validated) || (!filtered_Caudal_Down_Touch_Validated) || (!filtered_Nivel_Touch_Validated) || (!filtered_Fuga_Touch_Validated) || (!filtered_ON_Touch))
             {
                 for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
                 {
@@ -768,10 +938,19 @@ void touch_read(void)
                 led_strip_refresh(led_strip);
                 get_value_from_nvs("storage", "filtUp", &cal_filt_up_nvs);
                 get_value_from_nvs("storage", "filtDwn", &cal_filt_dwn_nvs);
+                get_value_from_nvs("storage", "filtNiv", &cal_filt_nivel_nvs);
+                get_value_from_nvs("storage", "filtFuga", &cal_filt_fuga_nvs);
+                get_value_from_nvs("storage", "filtON", &cal_filt_on_nvs);
                 filtered_Caudal_Up_Touch_Validated = cal_filt_up_nvs;
                 filtered_Caudal_Down_Touch_Validated = cal_filt_dwn_nvs;
+                filtered_Nivel_Touch_Validated = cal_filt_nivel_nvs;
+                filtered_Fuga_Touch_Validated = cal_filt_fuga_nvs;
+                filtered_ON_Touch = cal_filt_on_nvs;
                 ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
                 ESP_LOGI(TAG3, "Filtered Dwn: %ld\n", filtered_Caudal_Down_Touch_Validated);
+                ESP_LOGI(TAG3, "Filtered Nivel: %ld\n", filtered_Nivel_Touch_Validated);
+                ESP_LOGI(TAG3, "Filtered Fuga: %ld\n", filtered_Fuga_Touch_Validated);
+                ESP_LOGI(TAG3, "Filtered Touch ON: %ld\n", filtered_ON_Touch);
             }
             else
             {
@@ -788,6 +967,18 @@ void touch_read(void)
                 {
                     ESP_LOGE("NVS", "Error en guardado");
                 }
+                if (save_value_to_nvs("storage", "filtNiv", filtered_Nivel_Touch_Validated) != ESP_OK)
+                {
+                    ESP_LOGE("NVS", "Error en guardado");
+                }
+                if (save_value_to_nvs("storage", "filtFuga", filtered_Fuga_Touch_Validated) != ESP_OK)
+                {
+                    ESP_LOGE("NVS", "Error en guardado");
+                }
+                if (save_value_to_nvs("storage", "filtON", filtered_ON_Touch) != ESP_OK)
+                {
+                    ESP_LOGE("NVS", "Error en guardado");
+                }
             }
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -797,117 +988,72 @@ void touch_read(void)
                 ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
             }
             led_strip_refresh(led_strip);
+
+            if (filtered_Fuga_Touch_Validated == 0 || filtered_Caudal_Up_Touch_Validated == 0 || filtered_Nivel_Touch_Validated == 0 || filtered_Caudal_Down_Touch_Validated == 0 || filtered_ON_Touch == 0)
+            {
+                calib_stage = CALIB_STAGE_1;
+            }
         }
         break;
     case CALIB_STAGE_3:
-        if (filtered_Touch_ON > 1.5 * filtered_Touch_ON_Base)
+        switch (touch_on_state)
         {
-            if (on_off_debounce)
+        case WAIT_TOUCH_ON:
+            if (filtered_Touch_ON > 0.8 * filtered_ON_Touch)
             {
-                on_off_debounce--;
+                touch_start_time = esp_timer_get_time();
+                ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
+                touch_on_state = TOUCH_ON_PRESSED;
             }
-
-            if (!on_off_debounce)
+            break;
+        case TOUCH_ON_PRESSED:
+            if (filtered_Touch_ON <= 0.8 * filtered_ON_Touch)
             {
-                on_off_debounce = 20; // mejorar esto cambiandolo por timeout
+                ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
+                touch_on_state = TOUCH_ON_RELEASED;
+            }
+            break;
+        case TOUCH_ON_RELEASED:
+            touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+            if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
+            {
                 first_on = !first_on; // cambia de apagado a encendido y viceversa
                 if (first_on)
                 {
                     printf("ESTADO OFF");
+#ifdef VALV_MODUL
                     if (!count_mot_off)
                     {
                         count_mot_off = 100; // para apagado de motores
                     }
+#endif
+                    r_perc = 0;
+                    b_perc = 0;
+                    r_perc_ev = 0;
+                    b_perc_ev = 0;
                 }
                 else
                 {
                     printf("ESTADO ON");
+                    r_perc = 0.3;
+                    b_perc = 0.3;
+                    // r_perc_ev = 0.5;
+                    // b_perc_ev = 0.5;
                 }
+                r = r_perc * 255;
+                b = b_perc * 255;
+                r_int = (uint32_t)(r);
+                b_int = (uint32_t)(b);
             }
+            touch_on_state = WAIT_TOUCH_ON;
+            break;
         }
-        else
-        {
-            on_off_debounce = 20;
-        }
+
         break;
     }
 
     if ((calib_stage == CALIB_STAGE_3) && (!first_on))
     {
-
-        if ((filtered_Nivel > (filtered_Nivel_Base * 1.5 /*1.03*/)) && (filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)))
-        {
-            if (b_perc < 1 && r_perc > 0)
-            {
-                b_perc += 0.1;
-                r_perc -= 0.1;
-                r = r_perc * 255;
-                b = b_perc * 255;
-                r_int = (uint32_t)(r);
-                b_int = (uint32_t)(b);
-            }
-
-#ifdef VALV_MODUL
-            B_Caliente_Down = 0;
-            B_Caliente_Up = 1;
-#endif
-        }
-
-        if ((filtered_Fuga > (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
-        {
-            if (r_perc < 1 && b_perc > 0)
-            {
-                r_perc += 0.1;
-                b_perc -= 0.1;
-                r = r_perc * 255;
-                b = b_perc * 255;
-                r_int = (uint32_t)(r);
-                b_int = (uint32_t)(b);
-            }
-
-#ifdef VALV_MODUL
-            B_Caliente_Down = 1;
-            B_Caliente_Up = 0;
-#endif
-        }
-
-        if ((filtered_Fuga < (filtered_Fuga_Base * 1.5 /*1.03*/)) && (filtered_Nivel < (filtered_Nivel_Base * 1.5 /*1.03*/)))
-        {
-            r_int = (uint32_t)r;
-            b_int = (uint32_t)b;
-            B_Caliente_Up = 1;
-            B_Caliente_Down = 1;
-        }
-        //         if ((filtered_Caudal_Up > (filtered_Caudal_Up_Touch * 0.8 /*1.03*/)) && (filtered_Caudal_Up > filtered_Caudal_Down))
-        //         {
-        //             // printf("touch 1 = %ld\n ", filtered_Caudal_Up);
-        // #ifdef VALV_MODUL
-        //             if (B_Caliente_Down && B_Caliente_Up)
-        //             {
-        //                 B_Fria_Up = 0;
-        //             }
-        // #endif
-        //             // if (caudal < 1)
-        //             // {
-        //             //     caudal += 0.1;
-        //             // }
-
-        //             if (b_perc < 1 && r_perc > 0)
-        //             {
-        //                 b_perc += 0.1;
-        //                 r_perc -= 0.1;
-        //                 r = r_perc * 255;
-        //                 b = b_perc * 255;
-        //                 r_int = (uint32_t)(r);
-        //                 b_int = (uint32_t)(b);
-        //             }
-        //         }
-        //         else
-        //         {
-        //             B_Fria_Up = 1;
-        //         }
-
-        ////////////////////////////
         // maquina de estados para deteccion de pulsos de toque:
         switch (touch_state)
         {
@@ -919,24 +1065,12 @@ void touch_read(void)
                 touch_start_time = esp_timer_get_time();
                 touch_state = TOUCH_DETECTED;
             }
-            // if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.8) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
-            // {
-            //     touch_start_time = esp_timer_get_time();
-            //     printf("touch detection\n");
-            //     touch_state = TOUCH_DETECTED;
-            //     filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
-            // }
-            // else
-            // {
-            //     B_Fria_Down = 1;
-            // }
             break;
         case TOUCH_DETECTED:
 
             switch (touch_act_detect)
             {
             case 1:
-                // if ((filtered_Caudal_Down <= filtered_Caudal_Down_Touch_Validated * 0.8))
                 if (filtered_Caudal_Down <= 1.1 * filtered_Caudal_Down_Base)
                 {
                     touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
@@ -953,8 +1087,25 @@ void touch_read(void)
                     }
                 }
                 break;
+            case 2:
+                if (filtered_Nivel <= 1.1 * filtered_Nivel_Base)
+                {
+                    touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                    if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
+                    {
+                        touch_state = VALIDATE_PULSE;
+                    }
+                    else
+                    {
+                        touch_state = WAIT_FOR_TOUCH;
+                        B_Caliente_Down = 1;
+                        printf("touch 2 rejected\n");
+                        printf("touch 2 prev validated value: %ld\n", filtered_Nivel_Touch_Validated);
+                    }
+                }
+                break;
+
             case 3:
-                // if ((filtered_Caudal_Up <= filtered_Caudal_Up_Touch_Validated * 0.8))
                 if (filtered_Caudal_Up <= 1.1 * filtered_Caudal_Up_Base)
                 {
                     touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
@@ -968,7 +1119,24 @@ void touch_read(void)
                         B_Fria_Up = 1;
                         printf("touch 3 rejected\n");
                         printf("touch 3 prev validated value: %ld\n", filtered_Caudal_Up_Touch_Validated);
-                        // ESP_ERROR_CHECK(save_value_to_nvs("storage", "filtered_Caudal_Up_Touch_Validated", filtered_Caudal_Up_Touch_Validated));
+                    }
+                }
+                break;
+
+            case 4:
+                if (filtered_Fuga <= 1.1 * filtered_Fuga_Base)
+                {
+                    touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                    if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
+                    {
+                        touch_state = VALIDATE_PULSE;
+                    }
+                    else
+                    {
+                        touch_state = WAIT_FOR_TOUCH;
+                        B_Caliente_Up = 1;
+                        printf("touch 4 rejected\n");
+                        printf("touch 4 prev validated value: %ld\n", filtered_Fuga_Touch_Validated);
                     }
                 }
                 break;
@@ -986,19 +1154,89 @@ void touch_read(void)
                     B_Fria_Down = 0;
                 }
 #endif
-                if (r_perc < 1 && b_perc > 0)
+                // if (r_perc < 1 && b_perc > 0)
+                // {
+                //     r_perc += 0.1;
+                //     b_perc -= 0.1;
+                //     r = r_perc * 255;
+                //     b = b_perc * 255;
+                //     r_int = (uint32_t)(r);
+                //     b_int = (uint32_t)(b);
+                //     if (b_perc_ev > 0)
+                //         b_perc_ev -= 0.1;
+                //     // r_perc -= 0.1;
+                // }
+                if (b > 0.1)
                 {
-                    r_perc += 0.1;
+                    // r_perc += 0.1;
                     b_perc -= 0.1;
-                    r = r_perc * 255;
+                    // r = r_perc * 255;
                     b = b_perc * 255;
-                    r_int = (uint32_t)(r);
+                    // r_int = (uint32_t)(r);
                     b_int = (uint32_t)(b);
+                    ESP_LOGI("TEMP CHG", "cold minus = %.2f\n", b_perc);
                 }
+                else
+                {
+                    ESP_LOGI("TEMP CHG", "cold min = %.2f\n", b_perc);
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                    {
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+                    }
+                    led_strip_refresh(led_strip);
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                }
+
                 filtered_Caudal_Down_Touch_Validated = filtered_Caudal_Down_Touch_toValidate; // valido toque
                 printf("touch 1 validated\n");
                 printf("touch 1 validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
                 // ESP_ERROR_CHECK(save_value_to_nvs("storage", "filtered_Caudal_Down_Touch_Validated", filtered_Caudal_Down_Touch_Validated));
+                break;
+
+            case 2:
+
+#ifdef VALV_MODUL
+                B_Caliente_Down = 0;
+                B_Caliente_Up = 1;
+#endif
+
+                // if (b_perc < 1 && r_perc > 0)
+                // {
+                //     b_perc += 0.1;
+                //     r_perc -= 0.1;
+                //     r = r_perc * 255;
+                //     b = b_perc * 255;
+                //     r_int = (uint32_t)(r);
+                //     b_int = (uint32_t)(b);
+                //     if (r_perc_ev > 0)
+                //         r_perc_ev -= 0.1;
+                //     // b_perc -= 0.1;
+                // }
+
+                if (r_perc > 0.1)
+                {
+                    // b_perc += 0.1;
+                    r_perc -= 0.1;
+                    r = r_perc * 255;
+                    // b = b_perc * 255;
+                    r_int = (uint32_t)(r);
+                    // b_int = (uint32_t)(b);
+                    ESP_LOGI("TEMP CHG", "hot minus = %.2f\n", r_perc);
+                }
+                else
+                {
+                    ESP_LOGI("TEMP CHG", "hot min = %.2f\n", r_perc);
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                    {
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+                    }
+                    led_strip_refresh(led_strip);
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                }
+
+                filtered_Nivel_Touch_Validated = filtered_Nivel_Touch_toValidate; // valido toque
+                printf("touch 2 validated\n");
+                printf("touch 2 validated value: %ld\n", filtered_Nivel_Touch_Validated);
                 break;
 
             case 3:
@@ -1009,104 +1247,94 @@ void touch_read(void)
                 }
 #endif
 
-                if (b_perc < 1 && r_perc > 0)
+                // if (b_perc < 1 && r_perc > 0)
+                // {
+                //     b_perc += 0.1;
+                //     r_perc -= 0.1;
+                //     r = r_perc * 255;
+                //     b = b_perc * 255;
+                //     r_int = (uint32_t)(r);
+                //     b_int = (uint32_t)(b);
+                //     if (b_perc_ev < 1)
+                //         b_perc_ev += 0.1;
+                //     // r_perc += 0.1;
+                // }
+
+                if (b_perc < 1)
                 {
                     b_perc += 0.1;
-                    r_perc -= 0.1;
-                    r = r_perc * 255;
+                    // r_perc -= 0.1;
+                    // r = r_perc * 255;
                     b = b_perc * 255;
-                    r_int = (uint32_t)(r);
+                    // r_int = (uint32_t)(r);
                     b_int = (uint32_t)(b);
+                    ESP_LOGI("TEMP CHG", "cold add = %.2f\n", b_perc);
                 }
+                else
+                {
+                    ESP_LOGI("TEMP CHG", "cold max = %.2f\n", b_perc);
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                    {
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+                    }
+                    led_strip_refresh(led_strip);
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                }
+
                 filtered_Caudal_Up_Touch_Validated = filtered_Caudal_Up_Touch_toValidate; // valido toque
                 printf("touch 3 validated\n");
                 printf("touch 3 validated value: %ld\n", filtered_Caudal_Up_Touch_Validated);
+                break;
+
+            case 4:
+
+#ifdef VALV_MODUL
+                B_Caliente_Down = 1;
+                B_Caliente_Up = 0;
+#endif
+
+                // if (r_perc < 1 && b_perc > 0)
+                // {
+                //     r_perc += 0.1;
+                //     b_perc -= 0.1;
+                //     r = r_perc * 255;
+                //     b = b_perc * 255;
+                //     r_int = (uint32_t)(r);
+                //     b_int = (uint32_t)(b);
+                //     if (r_perc_ev < 1)
+                //         r_perc_ev += 0.1;
+                //     // b_perc += 0.1;
+                // }
+
+                if (r_perc < 1)
+                {
+                    r_perc += 0.1;
+                    // b_perc -= 0.1;
+                    r = r_perc * 255;
+                    // b = b_perc * 255;
+                    r_int = (uint32_t)(r);
+                    // b_int = (uint32_t)(b);
+                    ESP_LOGI("TEMP CHG", "hot add = %.2f\n", r_perc);
+                }
+                else
+                {
+                    ESP_LOGI("TEMP CHG", "hot max = %.2f\n", r_perc);
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                    {
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+                    }
+                    led_strip_refresh(led_strip);
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                }
+
+                filtered_Fuga_Touch_Validated = filtered_Fuga_Touch_toValidate; // valido toque
+                printf("touch 4 validated\n");
+                printf("touch 4 validated value: %ld\n", filtered_Fuga_Touch_Validated);
                 break;
             }
             touch_state = WAIT_FOR_TOUCH;
             break;
         }
-
-        //         if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch * 0.8) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up))
-        //         {
-        //             // printf("touch 2 = %ld\n ", filtered_Caudal_Down);
-
-        // #ifdef VALV_MODUL
-        //             if (B_Caliente_Down && B_Caliente_Up)
-        //             {
-        //                 B_Fria_Down = 0;
-        //             }
-        // #endif
-        //             // if (caudal > 0.3)
-        //             // {
-        //             //     caudal -= 0.1;
-        //             // }
-
-        //             if (r_perc < 1 && b_perc > 0)
-        //             {
-        //                 r_perc += 0.1;
-        //                 b_perc -= 0.1;
-        //                 r = r_perc * 255;
-        //                 b = b_perc * 255;
-        //                 r_int = (uint32_t)(r);
-        //                 b_int = (uint32_t)(b);
-        //             }
-        //         }
-        //         else
-        //         {
-        //             B_Fria_Down = 1;
-        //         }
-
-        // r_int = (uint32_t)(r * caudal);
-        // b_int = (uint32_t)(b * caudal);
-
-#ifndef VALV_MODUL
-        if (b_perc >= 0 && b_perc < 0.1)
-        {
-            EV4 = 1;
-            EV5 = 0;
-            EV6 = 0;
-            // gpio_set_level(Salida_EV4, 1);
-            // printf("Output_45=%d\n",gpio_get_level(Salida_EV4));
-        }
-        if (b_perc >= 0.1 && b_perc < 0.2)
-        {
-            EV4 = 0;
-            EV5 = 1;
-            EV6 = 0;
-        }
-        if (b_perc >= 0.2 && b_perc < 0.3)
-        {
-            EV4 = 1;
-            EV5 = 1;
-            EV6 = 0;
-        }
-        if (b_perc >= 0.3 && b_perc < 0.4)
-        {
-            EV4 = 0;
-            EV5 = 0;
-            EV6 = 1;
-        }
-        if (b_perc >= 0.4 && b_perc < 0.5)
-        {
-            EV4 = 1;
-            EV5 = 0;
-            EV6 = 1;
-        }
-        if (b_perc >= 0.5 && b_perc < 0.6)
-        {
-            EV4 = 0;
-            EV5 = 1;
-            EV6 = 1;
-        }
-        if (b_perc >= 0.6 && b_perc < 0.7)
-        {
-            EV4 = 1;
-            EV5 = 1;
-            EV6 = 1;
-        }
-
-#endif
     }
 }
 
@@ -1449,9 +1677,9 @@ void out_relay(void)
     gpio_set_level(Salida_Compresor, !B_Compresor);
     gpio_set_level(Salida_Cooler, !B_Cooler);
 #else
-    // gpio_set_level(Salida_EV1, EV1);
-    // gpio_set_level(Salida_EV2, EV2);
-    // gpio_set_level(Salida_EV3, EV3);
+    gpio_set_level(Salida_EV1, EV1);
+    gpio_set_level(Salida_EV2, EV2);
+    gpio_set_level(Salida_EV3, EV3);
     gpio_set_level(Salida_EV4, EV4);
     gpio_set_level(Salida_EV5, EV5);
     gpio_set_level(Salida_EV6, EV6);

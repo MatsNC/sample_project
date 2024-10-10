@@ -55,6 +55,8 @@
     "stdio.h": "c",
     "i2c.h": "c",
     "esp_err.h": "c",
-    "led_strip_rmt.h": "c"
+    "led_strip_rmt.h": "c",
+    "esp_rom_gpio.h": "c",
+    "gpio_types.h": "c"
   }
 }

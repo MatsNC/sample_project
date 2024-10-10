@@ -54,10 +54,6 @@
 #define LED_STRIP 38
 #endif
 
-// #define Touch_Nivel TOUCH_PAD_NUM4
-// #define Touch_Fuga TOUCH_PAD_NUM5
-// #define Touch_Caudal_Sube TOUCH_PAD_NUM1
-// #define Touch_Caudal_Baja TOUCH_PAD_NUM2
 #define Touch_Nivel TOUCH_PAD_NUM5
 #define Touch_Fuga TOUCH_PAD_NUM4
 #define Touch_Caudal_Sube TOUCH_PAD_NUM2
@@ -1231,7 +1227,7 @@ void touch_read(void)
                         ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
                     }
                     led_strip_refresh(led_strip);
-                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                    vTaskDelay(200 / portTICK_PERIOD_MS);
                 }
 
                 filtered_Nivel_Touch_Validated = filtered_Nivel_Touch_toValidate; // valido toque
@@ -1278,7 +1274,7 @@ void touch_read(void)
                         ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
                     }
                     led_strip_refresh(led_strip);
-                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                    vTaskDelay(200 / portTICK_PERIOD_MS);
                 }
 
                 filtered_Caudal_Up_Touch_Validated = filtered_Caudal_Up_Touch_toValidate; // valido toque

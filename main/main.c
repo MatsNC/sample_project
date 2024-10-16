@@ -157,8 +157,6 @@ static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
 
 float b_perc = 0.3;
 float r_perc = 0.3;
-float b_perc_ev = 0.3;
-float r_perc_ev = 0.3;
 
 float r = 255 * 0.5;
 float b = 255 * 0.5;
@@ -415,17 +413,11 @@ void valve_outputs(void)
     {
         if (b_perc < 0.1)
         {
-            EV1 = 0;
+            EV1 = 1;
             EV2 = 0;
             EV3 = 0;
             // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold off" ANSI_COLOR_RESET "\n");
-        }
-        // if (b_perc > 0 && b_perc < 0.1)
-        // {
-        //     EV1 = 1;
-        //     EV2 = 0;
-        //     EV3 = 0;
-        // }
+        }        
         if (b_perc >= 0.1 && b_perc < 0.2)
         {
             EV1 = 0;
@@ -471,17 +463,11 @@ void valve_outputs(void)
         /////////////////////////////////////////
         if (r_perc < 0.1)
         {
-            EV4 = 0;
+            EV4 = 1;
             EV5 = 0;
             EV6 = 0;
             // ESP_LOGI("EV", ANSI_COLOR_RED "hot off" ANSI_COLOR_RESET "\n");
-        }
-        // if (r_perc > 0 && r_perc < 0.1)
-        // {
-        //     EV4 = 1;
-        //     EV5 = 0;
-        //     EV6 = 0;
-        // }
+        }       
         if (r_perc >= 0.1 && r_perc < 0.2)
         {
             EV4 = 0;
@@ -828,25 +814,25 @@ void touch_read(void)
 
 #ifdef ESP_NOW
             esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Down, sizeof(filtered_Caudal_Down));
-            if (send_result == ESP_OK)
-            {
-                // ESP_LOGI(TAG, "Data send to peer MAC");
-            }
-            else
-            {
-                ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
-            }
-            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Up, sizeof(filtered_Caudal_Up));
-            if (send_result == ESP_OK)
-            {
-                // ESP_LOGI(TAG, "Data send to peer MAC");
-            }
-            else
-            {
-                ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
-            }
-            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Nivel, sizeof(filtered_Nivel));
-            send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Fuga, sizeof(filtered_Fuga));
+            // if (send_result == ESP_OK)
+            // {
+            //     ESP_LOGI("ESP_NOW", "Data send to peer MAC");
+            // }
+            // else
+            // {
+            //     ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
+            // }
+            // send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Caudal_Up, sizeof(filtered_Caudal_Up));
+            // if (send_result == ESP_OK)
+            // {
+            //     // ESP_LOGI(TAG, "Data send to peer MAC");
+            // }
+            // else
+            // {
+            //     ESP_LOGE(TAG_WIFI, "Error al enviar datos: %s", esp_err_to_name(send_result));
+            // }
+            // send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Nivel, sizeof(filtered_Nivel));
+            // send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Fuga, sizeof(filtered_Fuga));
 #endif
         }
     }
@@ -919,7 +905,6 @@ void touch_read(void)
 
         calib_cap_inputs();
 
-        // vTaskDelay(1000 / portTICK_PERIOD_MS);
         if (xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) != pdFALSE)
         {
             printf("Calib stage 2 a 3\n");
@@ -1025,16 +1010,12 @@ void touch_read(void)
 #endif
                     r_perc = 0;
                     b_perc = 0;
-                    r_perc_ev = 0;
-                    b_perc_ev = 0;
                 }
                 else
                 {
                     printf("ESTADO ON");
                     r_perc = 0.3;
                     b_perc = 0.3;
-                    // r_perc_ev = 0.5;
-                    // b_perc_ev = 0.5;
                 }
                 r = r_perc * 255;
                 b = b_perc * 255;
@@ -1150,25 +1131,10 @@ void touch_read(void)
                     B_Fria_Down = 0;
                 }
 #endif
-                // if (r_perc < 1 && b_perc > 0)
-                // {
-                //     r_perc += 0.1;
-                //     b_perc -= 0.1;
-                //     r = r_perc * 255;
-                //     b = b_perc * 255;
-                //     r_int = (uint32_t)(r);
-                //     b_int = (uint32_t)(b);
-                //     if (b_perc_ev > 0)
-                //         b_perc_ev -= 0.1;
-                //     // r_perc -= 0.1;
-                // }
                 if (b > 0.1)
                 {
-                    // r_perc += 0.1;
-                    b_perc -= 0.1;
-                    // r = r_perc * 255;
-                    b = b_perc * 255;
-                    // r_int = (uint32_t)(r);
+                    b_perc -= 0.1;                    
+                    b = b_perc * 255;                    
                     b_int = (uint32_t)(b);
                     ESP_LOGI("TEMP CHG", "cold minus = %.2f\n", b_perc);
                 }
@@ -1194,29 +1160,13 @@ void touch_read(void)
 #ifdef VALV_MODUL
                 B_Caliente_Down = 0;
                 B_Caliente_Up = 1;
-#endif
-
-                // if (b_perc < 1 && r_perc > 0)
-                // {
-                //     b_perc += 0.1;
-                //     r_perc -= 0.1;
-                //     r = r_perc * 255;
-                //     b = b_perc * 255;
-                //     r_int = (uint32_t)(r);
-                //     b_int = (uint32_t)(b);
-                //     if (r_perc_ev > 0)
-                //         r_perc_ev -= 0.1;
-                //     // b_perc -= 0.1;
-                // }
+#endif               
 
                 if (r_perc > 0.1)
                 {
-                    // b_perc += 0.1;
                     r_perc -= 0.1;
-                    r = r_perc * 255;
-                    // b = b_perc * 255;
-                    r_int = (uint32_t)(r);
-                    // b_int = (uint32_t)(b);
+                    r = r_perc * 255;                    
+                    r_int = (uint32_t)(r);                    
                     ESP_LOGI("TEMP CHG", "hot minus = %.2f\n", r_perc);
                 }
                 else
@@ -1241,28 +1191,12 @@ void touch_read(void)
                 {
                     B_Fria_Up = 0;
                 }
-#endif
+#endif                
 
-                // if (b_perc < 1 && r_perc > 0)
-                // {
-                //     b_perc += 0.1;
-                //     r_perc -= 0.1;
-                //     r = r_perc * 255;
-                //     b = b_perc * 255;
-                //     r_int = (uint32_t)(r);
-                //     b_int = (uint32_t)(b);
-                //     if (b_perc_ev < 1)
-                //         b_perc_ev += 0.1;
-                //     // r_perc += 0.1;
-                // }
-
-                if (b_perc < 1)
+                if (b_perc < 0.7)
                 {
-                    b_perc += 0.1;
-                    // r_perc -= 0.1;
-                    // r = r_perc * 255;
-                    b = b_perc * 255;
-                    // r_int = (uint32_t)(r);
+                    b_perc += 0.1;                    
+                    b = b_perc * 255;                    
                     b_int = (uint32_t)(b);
                     ESP_LOGI("TEMP CHG", "cold add = %.2f\n", b_perc);
                 }
@@ -1289,27 +1223,11 @@ void touch_read(void)
                 B_Caliente_Up = 0;
 #endif
 
-                // if (r_perc < 1 && b_perc > 0)
-                // {
-                //     r_perc += 0.1;
-                //     b_perc -= 0.1;
-                //     r = r_perc * 255;
-                //     b = b_perc * 255;
-                //     r_int = (uint32_t)(r);
-                //     b_int = (uint32_t)(b);
-                //     if (r_perc_ev < 1)
-                //         r_perc_ev += 0.1;
-                //     // b_perc += 0.1;
-                // }
-
-                if (r_perc < 1)
+                if (r_perc < 0.7)
                 {
                     r_perc += 0.1;
-                    // b_perc -= 0.1;
                     r = r_perc * 255;
-                    // b = b_perc * 255;
                     r_int = (uint32_t)(r);
-                    // b_int = (uint32_t)(b);
                     ESP_LOGI("TEMP CHG", "hot add = %.2f\n", r_perc);
                 }
                 else

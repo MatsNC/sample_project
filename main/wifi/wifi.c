@@ -1,6 +1,5 @@
 #include "wifi.h"
 
-
 void send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
 #ifdef ESP_NOW_LOG
@@ -79,6 +78,8 @@ esp_err_t init_wifi()
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_storage(WIFI_STORAGE_FLASH);
     esp_wifi_start();
+    ESP_ERROR_CHECK(esp_wifi_set_channel(CHANNEL, WIFI_SECOND_CHAN_NONE));
+    ESP_LOGI(TAG_WIFI, "Wi-Fi initialized in STA mode, set to channel %d", CHANNEL);
     wifi_off = 0;
     ESP_LOGI(TAG_WIFI, "wifi init completed");
     return ESP_OK;
@@ -97,7 +98,6 @@ void deinit_wifi()
     esp_wifi_stop();
     ESP_LOGI(TAG_WIFI, "wifi deinit completed");
 }
-
 
 /**
  * @brief Funcion que apaga ESP_NOW

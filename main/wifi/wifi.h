@@ -6,10 +6,16 @@
 #include "esp_netif.h"
 #include "esp_mac.h"
 #include "esp_event.h"
+#include "nvs_flash.h"
 #include <string.h>
 
 //#define ESP_NOW_LOG
 #define ESP_NOW
+
+#define WIFI_SSID "FV-IOT"
+#define WIFI_PASS "FVVR#iot1980"
+
+#define CHANNEL 11
 
 static bool wifi_off = 1;
 static bool esp_now_off = 1;

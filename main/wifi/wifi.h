@@ -15,7 +15,8 @@
 #define WIFI_SSID "FV-IOT"
 #define WIFI_PASS "FVVR#iot1980"
 
-#define CHANNEL 11
+//#define CHANNEL 11
+#define CHANNEL 1
 
 static bool wifi_off = 1;
 static bool esp_now_off = 1;

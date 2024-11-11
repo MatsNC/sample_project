@@ -34,6 +34,8 @@
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
 
+#define NEW_CODE 1          //ESTA VARIABLE SE USA PARA NUEVO CODIGO NO VALIDADO - SI ESTO FUNCIONA BIEN PASARLO A CODIGO FIJO
+
 #define ANSI_COLOR_RED "\x1b[31m"
 #define ANSI_COLOR_GREEN "\x1b[32m"
 #define ANSI_COLOR_YELLOW "\x1b[33m"
@@ -91,6 +93,8 @@
 #define BUF_SIZE 1024
 #define TASK_MEMORY 1024 * 4
 
+#define OFF_WITH_STOUT
+
 typedef struct
 {
     uint32_t received_data1;
@@ -125,6 +129,7 @@ typedef enum
     WAIT_TOUCH_ON,
     TOUCH_ON_PRESSED,
     TOUCH_ON_RELEASED,
+    DO_NOTHING,
 } touch_on_state_t;
 
 //-----------Definicion de variables----------------
@@ -138,7 +143,7 @@ bool B_Resistencia = 0;
 bool B_Compresor = 0;
 bool B_Cooler = 0;
 bool B_Electrovalvula_CO2 = 0;
-bool first_on; // cambiar por 1 despues
+bool first_on; 
 bool init_calib_stage = false;
 bool once = 0;
 bool set_dir = 1;
@@ -164,7 +169,7 @@ static int64_t touch_start_time = 0;
 static int64_t touch_duration = 0;
 static const int64_t MIN_PULSE_DURATION_MS = 50;   // Tiempo mínimo del toque
 static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
-static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
+//static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
 
 float b_perc = 0.3;
 float r_perc = 0.3;
@@ -412,7 +417,7 @@ void calib_cap_inputs(void)
         filtered_Fuga_Touch_Validated = (uint32_t)(0.9 * filtered_Fuga_Base_Touch);
         printf("touch 3 base = %ld\n ", filtered_Fuga_Touch_Validated);
     }
-    if (filtered_Touch_ON > 1.65 * filtered_Touch_ON_Base)
+    if (filtered_Touch_ON > /*1.17*/ 1.4 * filtered_Touch_ON_Base)
     {
         filtered_ON_Touch = (uint32_t)(0.95 * filtered_Touch_ON);
     }
@@ -634,7 +639,7 @@ void app_main()
     ESP_ERROR_CHECK(init_led_strip());
     // ESP_ERROR_CHECK(i2c_master_init());
     // i2c_task_func();
-    first_on = 1;
+    first_on = 1; // cambiar por 1 despues
 
     while (1)
     {
@@ -785,20 +790,20 @@ void touch_read(void)
 
 #ifdef ESP_NOW
     data_to_send.received_data1 = filtered_Touch_ON;
-    data_to_send.received_data2 = filtered_Touch_ON_Base;
+    data_to_send.received_data2 = filtered_ON_Touch;
     data_to_send.received_data3 = filtered_Nivel;
     data_to_send.received_data4 = filtered_Fuga;
     data_to_send.received_data5 = filtered_Caudal_Down;
     data_to_send.received_data6 = filtered_Caudal_Up;
     esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&data_to_send, sizeof(data_to_send));
-    if (send_result == ESP_OK)
-    {
-        ESP_LOGI("ESP_NOW", "Data sent to peer MAC");
-    }
-    else
-    {
-        ESP_LOGE("ESP_NOW", "Error al enviar datos: %s", esp_err_to_name(send_result));
-    }
+    // if (send_result == ESP_OK)
+    // {
+    //     ESP_LOGI("ESP_NOW", "Data sent to peer MAC");
+    // }
+    // else
+    // {
+    //     ESP_LOGE("ESP_NOW", "Error al enviar datos: %s", esp_err_to_name(send_result));
+    // }
     // esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Touch_ON, sizeof(filtered_Touch_ON));
     //  if (send_result == ESP_OK)
     //  {
@@ -1008,7 +1013,8 @@ void touch_read(void)
         switch (touch_on_state)
         {
         case WAIT_TOUCH_ON:
-            if (filtered_Touch_ON > 0.8 * filtered_ON_Touch)
+            if (filtered_Touch_ON >  filtered_ON_Touch)
+            //if (filtered_Touch_ON > 1.17 * filtered_Touch_ON_Base)
             {
                 touch_start_time = esp_timer_get_time();
                 ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
@@ -1016,8 +1022,10 @@ void touch_read(void)
             }
             break;
         case TOUCH_ON_PRESSED:
-            if (filtered_Touch_ON <= 0.8 * filtered_ON_Touch)
+            if (filtered_Touch_ON <= filtered_ON_Touch)
+            //if (filtered_Touch_ON < 1.1 * filtered_Touch_ON_Base)
             {
+                touch_start_time = esp_timer_get_time();    //prueba
                 ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
                 touch_on_state = TOUCH_ON_RELEASED;
             }
@@ -1052,6 +1060,7 @@ void touch_read(void)
                 first_on = !first_on; // cambia de apagado a encendido y viceversa
                 if (first_on)
                 {
+#ifdef OFF_WITH_STOUT
                     printf("ESTADO OFF");
 #ifdef VALV_MODUL
                     if (!count_mot_off)
@@ -1061,6 +1070,7 @@ void touch_read(void)
 #endif
                     r_perc = 0;
                     b_perc = 0;
+#endif
                 }
                 else
                 {
@@ -1073,7 +1083,14 @@ void touch_read(void)
                 r_int = (uint32_t)(r);
                 b_int = (uint32_t)(b);
             }
+#ifdef OFF_WITH_STOUT
             touch_on_state = WAIT_TOUCH_ON;
+#else
+            touch_on_state = DO_NOTHING;
+#endif
+            break;
+
+        case DO_NOTHING:
             break;
         }
 

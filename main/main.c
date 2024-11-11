@@ -34,7 +34,7 @@
 #define ESP_CHANNEL 1
 #define LED_STRIP_MAX_LEDS 12
 
-#define NEW_CODE 1          //ESTA VARIABLE SE USA PARA NUEVO CODIGO NO VALIDADO - SI ESTO FUNCIONA BIEN PASARLO A CODIGO FIJO
+#define NEW_CODE 1 // ESTA VARIABLE SE USA PARA NUEVO CODIGO NO VALIDADO - SI ESTO FUNCIONA BIEN PASARLO A CODIGO FIJO
 
 #define ANSI_COLOR_RED "\x1b[31m"
 #define ANSI_COLOR_GREEN "\x1b[32m"
@@ -95,16 +95,6 @@
 
 #define OFF_WITH_STOUT
 
-typedef struct
-{
-    uint32_t received_data1;
-    uint32_t received_data2;
-    uint32_t received_data3;
-    uint32_t received_data4;
-    uint32_t received_data5;
-    uint32_t received_data6;
-} touch_data_t;
-
 typedef enum
 {
     UNPRESSED,
@@ -143,11 +133,15 @@ bool B_Resistencia = 0;
 bool B_Compresor = 0;
 bool B_Cooler = 0;
 bool B_Electrovalvula_CO2 = 0;
-bool first_on; 
+bool first_on;
 bool init_calib_stage = false;
 bool once = 0;
 bool set_dir = 1;
 gpio_state_t press_state = UNPRESSED;
+
+touch_data_t touch_data;
+
+char touch_val[200] = "Waiting for data..."; /**< Buffer to store the received touch value as a string. */
 
 #ifndef VALV_MODUL
 
@@ -169,7 +163,7 @@ static int64_t touch_start_time = 0;
 static int64_t touch_duration = 0;
 static const int64_t MIN_PULSE_DURATION_MS = 50;   // Tiempo mínimo del toque
 static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
-//static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
+// static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
 
 float b_perc = 0.3;
 float r_perc = 0.3;
@@ -253,8 +247,6 @@ uint32_t cal_filt_dwn_nvs;
 uint32_t cal_filt_nivel_nvs;
 uint32_t cal_filt_fuga_nvs;
 uint32_t cal_filt_on_nvs;
-
-touch_data_t data_to_send;
 
 TimeOut_t xTimeOut;
 TickType_t xTicksToWait;
@@ -634,8 +626,14 @@ void app_main()
     inicio_hw();
     init_uart();
     set_timer(period);
+
+#if NEW_CODE == 1
+    ESP_ERROR_CHECK(init_wifi_webserver());
+    start_webserver(); /** Start the web server */
+#else
     ESP_ERROR_CHECK(init_wifi());
     ESP_ERROR_CHECK(init_esp_now());
+#endif
     ESP_ERROR_CHECK(init_led_strip());
     // ESP_ERROR_CHECK(i2c_master_init());
     // i2c_task_func();
@@ -788,14 +786,16 @@ void touch_read(void)
     touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up);
     touch_pad_read_raw_data(Touch_ON, &filtered_Touch_ON);
 
+    touch_data.received_data1 = filtered_Touch_ON;
+    touch_data.received_data2 = filtered_ON_Touch;
+    touch_data.received_data3 = filtered_Nivel;
+    touch_data.received_data4 = filtered_Fuga;
+    touch_data.received_data5 = filtered_Caudal_Down;
+    touch_data.received_data6 = filtered_Caudal_Up;
+
+#if NEW_CODE == 0
 #ifdef ESP_NOW
-    data_to_send.received_data1 = filtered_Touch_ON;
-    data_to_send.received_data2 = filtered_ON_Touch;
-    data_to_send.received_data3 = filtered_Nivel;
-    data_to_send.received_data4 = filtered_Fuga;
-    data_to_send.received_data5 = filtered_Caudal_Down;
-    data_to_send.received_data6 = filtered_Caudal_Up;
-    esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&data_to_send, sizeof(data_to_send));
+    esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&touch_data, sizeof(touch_data));
     // if (send_result == ESP_OK)
     // {
     //     ESP_LOGI("ESP_NOW", "Data sent to peer MAC");
@@ -824,6 +824,7 @@ void touch_read(void)
     //  }
     //  send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Nivel, sizeof(filtered_Nivel));
     //  send_result = esp_now_send(peer_mac, (uint8_t *)&filtered_Fuga, sizeof(filtered_Fuga));
+#endif
 #endif
 
     if (calib_stage == CALIB_STAGE_3)
@@ -947,11 +948,16 @@ void touch_read(void)
             get_value_from_nvs("storage", "filtNiv", &cal_filt_nivel_nvs);
             get_value_from_nvs("storage", "filtFuga", &cal_filt_fuga_nvs);
             get_value_from_nvs("storage", "filtON", &cal_filt_on_nvs);
-            filtered_Caudal_Up_Touch_Validated = cal_filt_up_nvs;
-            filtered_Caudal_Down_Touch_Validated = cal_filt_dwn_nvs;
-            filtered_Nivel_Touch_Validated = cal_filt_nivel_nvs;
-            filtered_Fuga_Touch_Validated = cal_filt_fuga_nvs;
-            filtered_ON_Touch = cal_filt_on_nvs;
+            if (!filtered_Caudal_Up_Touch_Validated)
+                filtered_Caudal_Up_Touch_Validated = cal_filt_up_nvs;
+            if (!filtered_Caudal_Down_Touch_Validated)
+                filtered_Caudal_Down_Touch_Validated = cal_filt_dwn_nvs;
+            if (!filtered_Nivel_Touch_Validated)
+                filtered_Nivel_Touch_Validated = cal_filt_nivel_nvs;
+            if (!filtered_Fuga_Touch_Validated)
+                filtered_Fuga_Touch_Validated = cal_filt_fuga_nvs;
+            if (!filtered_ON_Touch)
+                filtered_ON_Touch = cal_filt_on_nvs;
             ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Dwn: %ld\n", filtered_Caudal_Down_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Nivel: %ld\n", filtered_Nivel_Touch_Validated);
@@ -1013,8 +1019,8 @@ void touch_read(void)
         switch (touch_on_state)
         {
         case WAIT_TOUCH_ON:
-            if (filtered_Touch_ON >  filtered_ON_Touch)
-            //if (filtered_Touch_ON > 1.17 * filtered_Touch_ON_Base)
+            if (filtered_Touch_ON > filtered_ON_Touch)
+            // if (filtered_Touch_ON > 1.17 * filtered_Touch_ON_Base)
             {
                 touch_start_time = esp_timer_get_time();
                 ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
@@ -1023,9 +1029,9 @@ void touch_read(void)
             break;
         case TOUCH_ON_PRESSED:
             if (filtered_Touch_ON <= filtered_ON_Touch)
-            //if (filtered_Touch_ON < 1.1 * filtered_Touch_ON_Base)
+            // if (filtered_Touch_ON < 1.1 * filtered_Touch_ON_Base)
             {
-                touch_start_time = esp_timer_get_time();    //prueba
+                touch_start_time = esp_timer_get_time(); // prueba
                 ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
                 touch_on_state = TOUCH_ON_RELEASED;
             }

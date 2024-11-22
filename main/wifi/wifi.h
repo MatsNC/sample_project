@@ -15,8 +15,11 @@
 //#define ESP_NOW_LOG
 #define ESP_NOW
 
-#define WIFI_SSID "FV-IOT"
-#define WIFI_PASS "FVVR#iot1980"
+// #define WIFI_SSID "FV-IOT"
+// #define WIFI_PASS "FVVR#iot1980"
+
+#define WIFI_SSID "El celu de Tute"
+#define WIFI_PASS "1234mati" /**< Wifi credentials. */
 
 //#define CHANNEL 11    //mi celu   
 #define CHANNEL 1       //FV-IOT

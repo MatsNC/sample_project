@@ -205,7 +205,7 @@ void start_webserver()
     ESP_ERROR_CHECK(httpd_start(&server, &config));
 
     httpd_uri_t touch_data_uri = {
-        .uri = "/get_touch_data",
+        .uri = "/",
         .method = HTTP_GET,
         .handler = get_touch_data_handler,
         .user_ctx = NULL};

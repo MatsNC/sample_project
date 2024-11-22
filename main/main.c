@@ -93,7 +93,8 @@
 #define BUF_SIZE 1024
 #define TASK_MEMORY 1024 * 4
 
-#define OFF_WITH_STOUT
+// #define OFF_WITH_STOUT
+#define BUFFER_SIZE 10 // Tamaño del buffer para el promedio móvil
 
 typedef enum
 {
@@ -159,10 +160,11 @@ static touch_config_state_t touch_config_state = TOUCH_PAD_ATTEN_VOLTAGE1;
 
 touch_on_state_t touch_on_state;
 
-static int64_t touch_start_time = 0;
-static int64_t touch_duration = 0;
-static const int64_t MIN_PULSE_DURATION_MS = 50;   // Tiempo mínimo del toque
-static const int64_t MAX_PULSE_DURATION_MS = 1000; // Tiempo máximo del toque
+int64_t touch_start_time = 0;
+int64_t touch_duration = 0;
+int64_t touch_end_time = 0;
+static const int64_t MIN_PULSE_DURATION_MS = 100;  // Tiempo mínimo del toque
+static const int64_t MAX_PULSE_DURATION_MS = 4000; // Tiempo máximo del toque
 // static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
 
 float b_perc = 0.3;
@@ -278,6 +280,10 @@ float Pres_Sal;
 
 static esp_adc_cal_characteristics_t adc1_chars;
 
+static uint32_t touch_buffer[BUFFER_SIZE] = {0}; // Buffer circular
+static int buffer_index = 0;                     // Índice actual en el buffer
+static uint32_t touch_avg = 0;                   // Promedio de las lecturas
+
 //--------------------Prototipo de funciones--------------------------------
 void inicio_hw(void);
 static void init_uart(void);
@@ -291,8 +297,40 @@ static void I2C_task(void *pvParameters);
 void out_relay(void);
 int eval_touch_in(void);
 void press_proccess(void);
-
+static void update_touch_average(uint32_t);
 //-----------------------------------------------------------------------------
+
+#if NEW_CODE == 1
+
+/**
+ * @brief Actualiza el promedio móvil de las lecturas del sensor capacitivo.
+ *
+ * Esta función utiliza un buffer circular para almacenar las últimas lecturas
+ * del sensor capacitivo. Sustituye la lectura más antigua con el nuevo valor,
+ * calcula la suma de los valores en el buffer, y actualiza el promedio móvil.
+ *
+ * @param new_value Nueva lectura del sensor capacitivo.
+ *
+ * @note El promedio se guarda en la variable global `touch_avg` y el buffer
+ * utiliza un tamaño fijo definido por `BUFFER_SIZE`.
+ */
+
+static void update_touch_average(uint32_t new_value)
+{
+    // Sustituir el valor más antiguo en el buffer
+    touch_buffer[buffer_index] = new_value;
+    buffer_index = (buffer_index + 1) % BUFFER_SIZE;
+
+    // Calcular el promedio
+    uint64_t sum = 0;
+    for (int i = 0; i < BUFFER_SIZE; i++)
+    {
+        sum += touch_buffer[i];
+    }
+    touch_avg = sum / BUFFER_SIZE;
+}
+
+#endif
 
 /**
  * @brief Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente
@@ -409,7 +447,7 @@ void calib_cap_inputs(void)
         filtered_Fuga_Touch_Validated = (uint32_t)(0.9 * filtered_Fuga_Base_Touch);
         printf("touch 3 base = %ld\n ", filtered_Fuga_Touch_Validated);
     }
-    if (filtered_Touch_ON > /*1.17*/ 1.4 * filtered_Touch_ON_Base)
+    if (filtered_Touch_ON > 1.17 /* 1.4 */ * filtered_Touch_ON_Base)
     {
         filtered_ON_Touch = (uint32_t)(0.95 * filtered_Touch_ON);
     }
@@ -554,6 +592,9 @@ void gpio_pin_proccess(void)
         ESP_LOGI(TAG_GPIO, "IN: 0\n");
         once = 0;
         press_state = PRESSED;
+#ifndef OFF_WITH_STOUT
+        first_on = 1;
+#endif
         set_timer(period);
     }
 }
@@ -785,8 +826,10 @@ void touch_read(void)
     touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down);
     touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up);
     touch_pad_read_raw_data(Touch_ON, &filtered_Touch_ON);
+    update_touch_average(filtered_Touch_ON);
 
     touch_data.received_data1 = filtered_Touch_ON;
+    // touch_data.received_data1 = touch_avg;
     touch_data.received_data2 = filtered_ON_Touch;
     touch_data.received_data3 = filtered_Nivel;
     touch_data.received_data4 = filtered_Fuga;
@@ -862,7 +905,9 @@ void touch_read(void)
             // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 th = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Touch_Validated);
 
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON avg= %ld" ANSI_COLOR_RESET "\n", touch_avg);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_ON_Touch);
 
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
@@ -1019,8 +1064,12 @@ void touch_read(void)
         switch (touch_on_state)
         {
         case WAIT_TOUCH_ON:
+#if NEW_CODE == 0
+            if (touch_avg > filtered_ON_Touch)
+#else
             if (filtered_Touch_ON > filtered_ON_Touch)
-            // if (filtered_Touch_ON > 1.17 * filtered_Touch_ON_Base)
+#endif
+
             {
                 touch_start_time = esp_timer_get_time();
                 ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
@@ -1028,10 +1077,13 @@ void touch_read(void)
             }
             break;
         case TOUCH_ON_PRESSED:
+#if NEW_CODE == 0
+            if (touch_avg <= filtered_ON_Touch)
+#else
             if (filtered_Touch_ON <= filtered_ON_Touch)
-            // if (filtered_Touch_ON < 1.1 * filtered_Touch_ON_Base)
+#endif
+
             {
-                touch_start_time = esp_timer_get_time(); // prueba
                 ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
                 touch_on_state = TOUCH_ON_RELEASED;
             }
@@ -1060,7 +1112,11 @@ void touch_read(void)
 #endif
             break;
         case TOUCH_ON_RELEASED:
-            touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+            touch_end_time = esp_timer_get_time();
+            touch_duration = (touch_end_time - touch_start_time) / 1000;
+            ESP_LOGI(TAG3, "touch_START: %llu\n", touch_start_time);
+            ESP_LOGI(TAG3, "touch_END: %llu\n", touch_end_time);
+            ESP_LOGI(TAG3, "touch_DUR: %llu\n", touch_duration);
             if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
             {
                 first_on = !first_on; // cambia de apagado a encendido y viceversa
@@ -1076,6 +1132,9 @@ void touch_read(void)
 #endif
                     r_perc = 0;
                     b_perc = 0;
+#else
+                    first_on = false;
+
 #endif
                 }
                 else
@@ -1089,15 +1148,12 @@ void touch_read(void)
                 r_int = (uint32_t)(r);
                 b_int = (uint32_t)(b);
             }
-#ifdef OFF_WITH_STOUT
             touch_on_state = WAIT_TOUCH_ON;
-#else
-            touch_on_state = DO_NOTHING;
-#endif
+            // touch_on_state = DO_NOTHING;
             break;
 
-        case DO_NOTHING:
-            break;
+            case DO_NOTHING:
+                break;
         }
 
         break;

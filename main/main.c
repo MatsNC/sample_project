@@ -10,7 +10,8 @@
    -Se agrega guardado en memoria de calibracion.
    -Se agrega cambio con pulsador BOOT
    -Se agregan modulos funcionales
- *
+   -CUIDADO: Para calibrar no se deben tocar todas las entradas juntas, sino de a una por vez.
+ *  
  */
 
 #include "freertos/FreeRTOS.h"
@@ -32,9 +33,12 @@
 #include "i2c/i2c.h"
 
 #define ESP_CHANNEL 1
+
 #define LED_STRIP_MAX_LEDS 12
 
-#define NEW_CODE 1 // ESTA VARIABLE SE USA PARA NUEVO CODIGO NO VALIDADO - SI ESTO FUNCIONA BIEN PASARLO A CODIGO FIJO
+#define NEW_CODE 1 // ESTE DEFINE SE USA PARA NUEVO CODIGO NO VALIDADO - SI ESTO FUNCIONA BIEN PASARLO A CODIGO FIJO
+
+#define ENC_VOLANTE 1 // DEFINE PARA ENCENDER CON VOLANTE EN LUGAR DE PICO
 
 #define ANSI_COLOR_RED "\x1b[31m"
 #define ANSI_COLOR_GREEN "\x1b[32m"
@@ -49,6 +53,9 @@
 #define CALIB_STAGE_2 2
 #define CALIB_STAGE_3 3
 // #define VALV_MODUL 1
+#define MEM
+
+#define OFF_MINUS 0 //para que se apague con pulsacion larga de cualquiera de los menos
 
 #ifdef VALV_MODUL
 #define LED_STRIP 18
@@ -225,8 +232,8 @@ uint32_t filtered_Caudal_Down_Touch_toValidate; // Fria -
 uint32_t filtered_Caudal_Up_Touch_toValidate;   // Fria +
 
 // valores de toque ya validados:
-uint32_t filtered_Nivel_Touch_Validated;
-uint32_t filtered_Fuga_Touch_Validated;
+uint32_t filtered_Nivel_Touch_Validated = 0;
+uint32_t filtered_Fuga_Touch_Validated = 0;
 uint32_t filtered_Caudal_Down_Touch_Validated = 0;
 uint32_t filtered_Caudal_Up_Touch_Validated = 0;
 
@@ -904,11 +911,15 @@ void touch_read(void)
             // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 base = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Base);
             // ESP_LOGI("TOUCH 4", ANSI_COLOR_YELLOW "touch 4 th = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Touch_Validated);
 
+#if ENC_VOLANTE == 0
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON avg= %ld" ANSI_COLOR_RESET "\n", touch_avg);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_ON_Touch);
-
+#else
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated);
+#endif
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
             touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down_Ant);
@@ -988,6 +999,7 @@ void touch_read(void)
         {
             printf("Calib stage 2 a 3\n");
             calib_stage = CALIB_STAGE_3;
+#ifdef MEM
             get_value_from_nvs("storage", "filtUp", &cal_filt_up_nvs);
             get_value_from_nvs("storage", "filtDwn", &cal_filt_dwn_nvs);
             get_value_from_nvs("storage", "filtNiv", &cal_filt_nivel_nvs);
@@ -1003,6 +1015,7 @@ void touch_read(void)
                 filtered_Fuga_Touch_Validated = cal_filt_fuga_nvs;
             if (!filtered_ON_Touch)
                 filtered_ON_Touch = cal_filt_on_nvs;
+#endif
             ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Dwn: %ld\n", filtered_Caudal_Down_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Nivel: %ld\n", filtered_Nivel_Touch_Validated);
@@ -1024,6 +1037,7 @@ void touch_read(void)
                     ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 255, 0));
                 }
                 led_strip_refresh(led_strip);
+#ifdef MEM
                 if (save_value_to_nvs("storage", "filtUp", filtered_Caudal_Up_Touch_Validated) != ESP_OK)
                 {
                     ESP_LOGE("NVS", "Error en guardado");
@@ -1044,6 +1058,7 @@ void touch_read(void)
                 {
                     ESP_LOGE("NVS", "Error en guardado");
                 }
+#endif
             }
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -1060,14 +1075,16 @@ void touch_read(void)
             }
         }
         break;
-    case CALIB_STAGE_3:
+    case CALIB_STAGE_3: // Para encendido/apagado del sistema
         switch (touch_on_state)
         {
         case WAIT_TOUCH_ON:
 #if NEW_CODE == 0
             if (touch_avg > filtered_ON_Touch)
-#else
+#elif ENC_VOLANTE == 0
             if (filtered_Touch_ON > filtered_ON_Touch)
+#else
+            if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) || (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5))
 #endif
 
             {
@@ -1079,8 +1096,10 @@ void touch_read(void)
         case TOUCH_ON_PRESSED:
 #if NEW_CODE == 0
             if (touch_avg <= filtered_ON_Touch)
-#else
+#elif ENC_VOLANTE == 0
             if (filtered_Touch_ON <= filtered_ON_Touch)
+#else
+            if ((filtered_Caudal_Up < filtered_Caudal_Up_Touch_Validated * 0.5) || (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5))
 #endif
 
             {
@@ -1119,6 +1138,7 @@ void touch_read(void)
             ESP_LOGI(TAG3, "touch_DUR: %llu\n", touch_duration);
             if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
             {
+                ESP_LOGI(TAG3, "encendido");
                 first_on = !first_on; // cambia de apagado a encendido y viceversa
                 if (first_on)
                 {
@@ -1152,8 +1172,8 @@ void touch_read(void)
             // touch_on_state = DO_NOTHING;
             break;
 
-            case DO_NOTHING:
-                break;
+        case DO_NOTHING:
+            break;
         }
 
         break;
@@ -1187,12 +1207,16 @@ void touch_read(void)
                     }
                     else
                     {
+#if OFF_MINUS == 1
+
+#endif
                         touch_state = WAIT_FOR_TOUCH;
                         B_Fria_Down = 1;
                         printf("touch 1 rejected\n");
                         printf("touch 1 prev validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
                     }
                 }
+
                 break;
             case 2:
                 if (filtered_Nivel <= 1.1 * filtered_Nivel_Base)
@@ -1204,12 +1228,16 @@ void touch_read(void)
                     }
                     else
                     {
+#if OFF_MINUS == 1
+                    
+#endif
                         touch_state = WAIT_FOR_TOUCH;
                         B_Caliente_Down = 1;
                         printf("touch 2 rejected\n");
                         printf("touch 2 prev validated value: %ld\n", filtered_Nivel_Touch_Validated);
                     }
                 }
+
                 break;
 
             case 3:
@@ -1246,6 +1274,7 @@ void touch_read(void)
                         printf("touch 4 prev validated value: %ld\n", filtered_Fuga_Touch_Validated);
                     }
                 }
+
                 break;
             }
 

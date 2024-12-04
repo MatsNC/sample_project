@@ -11,7 +11,7 @@
    -Se agrega cambio con pulsador BOOT
    -Se agregan modulos funcionales
    -CUIDADO: Para calibrar no se deben tocar todas las entradas juntas, sino de a una por vez.
- *  
+ *
  */
 
 #include "freertos/FreeRTOS.h"
@@ -55,7 +55,7 @@
 // #define VALV_MODUL 1
 #define MEM
 
-#define OFF_MINUS 0 //para que se apague con pulsacion larga de cualquiera de los menos
+#define OFF_MINUS 1 // para que se apague con pulsacion larga de cualquiera de los menos
 
 #ifdef VALV_MODUL
 #define LED_STRIP 18
@@ -145,6 +145,7 @@ bool first_on;
 bool init_calib_stage = false;
 bool once = 0;
 bool set_dir = 1;
+bool blink_inh = false;
 gpio_state_t press_state = UNPRESSED;
 
 touch_data_t touch_data;
@@ -171,7 +172,7 @@ int64_t touch_start_time = 0;
 int64_t touch_duration = 0;
 int64_t touch_end_time = 0;
 static const int64_t MIN_PULSE_DURATION_MS = 100;  // Tiempo mínimo del toque
-static const int64_t MAX_PULSE_DURATION_MS = 4000; // Tiempo máximo del toque
+static const int64_t MAX_PULSE_DURATION_MS = 2500; // Tiempo máximo del toque
 // static const int64_t MAX_PULSE_RECALIB_MS = 10000; // Tiempo máximo del toque
 
 float b_perc = 0.3;
@@ -305,6 +306,7 @@ void out_relay(void);
 int eval_touch_in(void);
 void press_proccess(void);
 static void update_touch_average(uint32_t);
+void led_off_shutdown(void);
 //-----------------------------------------------------------------------------
 
 #if NEW_CODE == 1
@@ -338,6 +340,26 @@ static void update_touch_average(uint32_t new_value)
 }
 
 #endif
+
+/**
+ * @brief Funcion que apaga los leds para dar aviso de apagado
+ * @param [in] void
+ * @return void
+ */
+
+void led_off_shutdown()
+{
+    if (!blink_inh)
+    {
+        for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+        {
+            ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+        }
+        led_strip_refresh(led_strip);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    blink_inh = true;
+}
 
 /**
  * @brief Funcion que evalua cual entrada capacitiva se activó y devuelve el número correspondiente
@@ -1198,8 +1220,19 @@ void touch_read(void)
             switch (touch_act_detect)
             {
             case 1:
+#if OFF_MINUS == 1
+                if (filtered_Caudal_Down >= 1.1 * filtered_Caudal_Down_Base)
+                {
+                    touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                    if (touch_duration >= 3000)
+                    {
+                        led_off_shutdown();
+                    }
+                }
+#endif
                 if (filtered_Caudal_Down <= 1.1 * filtered_Caudal_Down_Base)
                 {
+                    blink_inh = false;
                     touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
                     if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
                     {
@@ -1208,7 +1241,11 @@ void touch_read(void)
                     else
                     {
 #if OFF_MINUS == 1
-
+                        if (touch_duration >= 3000 && touch_duration <= 8000)
+                        {
+                            ESP_LOGI(TAG3, "ME APAGO");
+                            first_on = 1;
+                        }
 #endif
                         touch_state = WAIT_FOR_TOUCH;
                         B_Fria_Down = 1;
@@ -1219,8 +1256,20 @@ void touch_read(void)
 
                 break;
             case 2:
+
+#if OFF_MINUS == 1
+                if (filtered_Nivel >= 1.1 * filtered_Nivel_Base)
+                {
+                    touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                    if (touch_duration >= 3000)
+                    {
+                        led_off_shutdown();
+                    }
+                }
+#endif
                 if (filtered_Nivel <= 1.1 * filtered_Nivel_Base)
                 {
+                    blink_inh = false;
                     touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
                     if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
                     {
@@ -1229,7 +1278,11 @@ void touch_read(void)
                     else
                     {
 #if OFF_MINUS == 1
-                    
+                        if (touch_duration >= 3000 && touch_duration <= 8000)
+                        {
+                            ESP_LOGI(TAG3, "ME APAGO");
+                            first_on = 1;
+                        }
 #endif
                         touch_state = WAIT_FOR_TOUCH;
                         B_Caliente_Down = 1;

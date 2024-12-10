@@ -242,6 +242,7 @@ uint32_t filtered_Caudal_Up_Touch_Validated = 0;
 
 uint8_t calib = 100;
 uint8_t on_off_debounce = 2;
+uint8_t on_state_but = 0;
 
 float caudal = 0.6;
 
@@ -490,7 +491,7 @@ void valve_outputs(void)
     {
         if (b_perc < 0.1)
         {
-            EV1 = 1;
+            EV1 = 0;
             EV2 = 0;
             EV3 = 0;
             // ESP_LOGI("EV", ANSI_COLOR_BLUE "cold off" ANSI_COLOR_RESET "\n");
@@ -540,7 +541,7 @@ void valve_outputs(void)
         /////////////////////////////////////////
         if (r_perc < 0.1)
         {
-            EV4 = 1;
+            EV4 = 0;
             EV5 = 0;
             EV6 = 0;
             // ESP_LOGI("EV", ANSI_COLOR_RED "hot off" ANSI_COLOR_RESET "\n");
@@ -596,7 +597,7 @@ void valve_outputs(void)
         EV4 = 0;
         EV5 = 0;
         EV6 = 0;
-        // ESP_LOGI("EV", ANSI_COLOR_GREEN "all off" ANSI_COLOR_RESET "\n");
+        // ESP_LOGI("EV", ANSI_COLOR_RED "all off" ANSI_COLOR_RESET "\n");
     }
 #endif
 }
@@ -865,6 +866,31 @@ void touch_read(void)
     touch_data.received_data5 = filtered_Caudal_Down;
     touch_data.received_data6 = filtered_Caudal_Up;
 
+#if NEW_CODE == 1 // Esta seccion del codigo es para resetear los valores de cmparacion de las entradas validados cuando superan un determinado valor
+    if (calib_stage == CALIB_STAGE_3)
+    {
+        if (filtered_Caudal_Up_Touch_Validated > 400000)
+        {
+            filtered_Caudal_Up_Touch_Validated = 0.9 * filtered_Caudal_Up_Base;
+        }
+
+        if (filtered_Caudal_Down_Touch_Validated > 400000)
+        {
+            filtered_Caudal_Down_Touch_Validated = 0.9 * filtered_Caudal_Down_Base;
+        }
+
+        if (filtered_Nivel_Touch_Validated > 400000)
+        {
+            filtered_Nivel_Touch_Validated = 0.9 * filtered_Nivel_Base;
+        }
+
+        if (filtered_Fuga_Touch_Validated > 400000)
+        {
+            filtered_Fuga_Touch_Validated = 0.9 * filtered_Fuga_Base;
+        }
+    }
+#endif
+
 #if NEW_CODE == 0
 #ifdef ESP_NOW
     esp_err_t send_result = esp_now_send(peer_mac, (uint8_t *)&touch_data, sizeof(touch_data));
@@ -939,8 +965,8 @@ void touch_read(void)
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_ON_Touch);
 #else
-            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
-            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated);
+            // ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
+            // ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated);
 #endif
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
@@ -1098,104 +1124,126 @@ void touch_read(void)
         }
         break;
     case CALIB_STAGE_3: // Para encendido/apagado del sistema
-        switch (touch_on_state)
+        if (first_on)
         {
-        case WAIT_TOUCH_ON:
+            // ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
+            switch (touch_on_state)
+            {
+            case WAIT_TOUCH_ON:
 #if NEW_CODE == 0
-            if (touch_avg > filtered_ON_Touch)
+                if (touch_avg > filtered_ON_Touch)
 #elif ENC_VOLANTE == 0
-            if (filtered_Touch_ON > filtered_ON_Touch)
+                if (filtered_Touch_ON > filtered_ON_Touch)
 #else
-            if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) || (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5))
+                if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*|| (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5)*/)
 #endif
 
-            {
-                touch_start_time = esp_timer_get_time();
-                ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
-                touch_on_state = TOUCH_ON_PRESSED;
-            }
-            break;
-        case TOUCH_ON_PRESSED:
+                {
+                    on_state_but = 1;
+                    touch_start_time = esp_timer_get_time();
+                    ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
+                    touch_on_state = TOUCH_ON_PRESSED;
+                }
+
+                if (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5)
+                {
+                    on_state_but = 2;
+                    touch_start_time = esp_timer_get_time();
+                    ESP_LOGI(TAG3, "TOUCH ON PRESSED = %ld\n", filtered_Touch_ON);
+                    touch_on_state = TOUCH_ON_PRESSED;
+                }
+
+                break;
+            case TOUCH_ON_PRESSED:
 #if NEW_CODE == 0
-            if (touch_avg <= filtered_ON_Touch)
+                if (touch_avg <= filtered_ON_Touch)
 #elif ENC_VOLANTE == 0
-            if (filtered_Touch_ON <= filtered_ON_Touch)
+                if (filtered_Touch_ON <= filtered_ON_Touch)
 #else
-            if ((filtered_Caudal_Up < filtered_Caudal_Up_Touch_Validated * 0.5) || (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5))
+                if ((filtered_Caudal_Up < filtered_Caudal_Up_Touch_Validated * 0.5) && (1 == on_state_but) /*|| (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5)*/)
 #endif
 
-            {
-                ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
-                touch_on_state = TOUCH_ON_RELEASED;
-            }
+                {
+                    ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
+                    touch_on_state = TOUCH_ON_RELEASED;
+                }
+
+                if ((filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5) && (2 == on_state_but) /*|| (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5)*/)
+
+                {
+                    ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
+                    touch_on_state = TOUCH_ON_RELEASED;
+                }
+
 #ifdef CALIB_WITH_STOUT
-            touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
-            if (touch_duration >= MAX_PULSE_RECALIB_MS)
-            {
-                calib_stage = CALIB_STAGE_1;
-                init_calib_stage = false;
-                touch_on_state = WAIT_TOUCH_ON;
-
-                for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                touch_duration = (esp_timer_get_time() - touch_start_time) / 1000;
+                if (touch_duration >= MAX_PULSE_RECALIB_MS)
                 {
-                    ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 255, 0));
-                }
-                led_strip_refresh(led_strip);
+                    calib_stage = CALIB_STAGE_1;
+                    init_calib_stage = false;
+                    touch_on_state = WAIT_TOUCH_ON;
 
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-
-                for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
-                {
-                    ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
-                }
-                led_strip_refresh(led_strip);
-            }
-#endif
-            break;
-        case TOUCH_ON_RELEASED:
-            touch_end_time = esp_timer_get_time();
-            touch_duration = (touch_end_time - touch_start_time) / 1000;
-            ESP_LOGI(TAG3, "touch_START: %llu\n", touch_start_time);
-            ESP_LOGI(TAG3, "touch_END: %llu\n", touch_end_time);
-            ESP_LOGI(TAG3, "touch_DUR: %llu\n", touch_duration);
-            if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
-            {
-                ESP_LOGI(TAG3, "encendido");
-                first_on = !first_on; // cambia de apagado a encendido y viceversa
-                if (first_on)
-                {
-#ifdef OFF_WITH_STOUT
-                    printf("ESTADO OFF");
-#ifdef VALV_MODUL
-                    if (!count_mot_off)
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
                     {
-                        count_mot_off = 100; // para apagado de motores
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 255, 0));
                     }
-#endif
-                    r_perc = 0;
-                    b_perc = 0;
-#else
-                    first_on = false;
+                    led_strip_refresh(led_strip);
 
-#endif
+                    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+                    for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
+                    {
+                        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 0, 0, 0));
+                    }
+                    led_strip_refresh(led_strip);
                 }
-                else
+#endif
+                break;
+            case TOUCH_ON_RELEASED:
+                touch_end_time = esp_timer_get_time();
+                touch_duration = (touch_end_time - touch_start_time) / 1000;
+                ESP_LOGI(TAG3, "touch_START: %llu\n", touch_start_time);
+                ESP_LOGI(TAG3, "touch_END: %llu\n", touch_end_time);
+                ESP_LOGI(TAG3, "touch_DUR: %llu\n", touch_duration);
+                if (touch_duration >= MIN_PULSE_DURATION_MS && touch_duration <= MAX_PULSE_DURATION_MS)
                 {
-                    printf("ESTADO ON");
-                    r_perc = 0.3;
-                    b_perc = 0.3;
-                }
-                r = r_perc * 255;
-                b = b_perc * 255;
-                r_int = (uint32_t)(r);
-                b_int = (uint32_t)(b);
-            }
-            touch_on_state = WAIT_TOUCH_ON;
-            // touch_on_state = DO_NOTHING;
-            break;
+                    ESP_LOGI(TAG3, "encendido");
+                    first_on = !first_on; // cambia de apagado a encendido y viceversa
+                    if (first_on)
+                    {
+#ifdef OFF_WITH_STOUT
+                        printf("ESTADO OFF");
+#ifdef VALV_MODUL
+                        if (!count_mot_off)
+                        {
+                            count_mot_off = 100; // para apagado de motores
+                        }
+#endif
+                        r_perc = 0;
+                        b_perc = 0;
+#else
+                        first_on = false;
 
-        case DO_NOTHING:
-            break;
+#endif
+                    }
+                    else
+                    {
+                        printf("ESTADO ON");
+                        r_perc = 0.3;
+                        b_perc = 0.3;
+                    }
+                    r = r_perc * 255;
+                    b = b_perc * 255;
+                    r_int = (uint32_t)(r);
+                    b_int = (uint32_t)(b);
+                }
+                touch_on_state = WAIT_TOUCH_ON;
+                // touch_on_state = DO_NOTHING;
+                break;
+
+            case DO_NOTHING:
+                break;
+            }
         }
 
         break;
@@ -1282,6 +1330,9 @@ void touch_read(void)
                         {
                             ESP_LOGI(TAG3, "ME APAGO");
                             first_on = 1;
+                            touch_on_state = WAIT_TOUCH_ON;
+                            // touch_duration = 0;
+                            // touch_start_time = 0;
                         }
 #endif
                         touch_state = WAIT_FOR_TOUCH;

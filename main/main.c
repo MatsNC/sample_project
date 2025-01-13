@@ -872,21 +872,25 @@ void touch_read(void)
         if (filtered_Caudal_Up_Touch_Validated > 400000)
         {
             filtered_Caudal_Up_Touch_Validated = 0.9 * filtered_Caudal_Up_Base;
+            ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
         if (filtered_Caudal_Down_Touch_Validated > 400000)
         {
             filtered_Caudal_Down_Touch_Validated = 0.9 * filtered_Caudal_Down_Base;
+            ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
         if (filtered_Nivel_Touch_Validated > 400000)
         {
             filtered_Nivel_Touch_Validated = 0.9 * filtered_Nivel_Base;
+            ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
         if (filtered_Fuga_Touch_Validated > 400000)
         {
             filtered_Fuga_Touch_Validated = 0.9 * filtered_Fuga_Base;
+            ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
     }
 #endif
@@ -965,8 +969,11 @@ void touch_read(void)
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_ON_Touch);
 #else
-            // ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
-            // ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated );
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_YELLOW "touch 2 ON = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_YELLOW "touch 2 ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Touch_Validated );
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch STATE = %d", touch_state);
 #endif
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
             touch_pad_read_raw_data(Touch_Fuga, &filtered_Fuga_Ant);
@@ -1292,7 +1299,10 @@ void touch_read(void)
                         if (touch_duration >= 3000 && touch_duration <= 8000)
                         {
                             ESP_LOGI(TAG3, "ME APAGO");
+
                             first_on = 1;
+                            touch_on_state = WAIT_TOUCH_ON;
+                            printf("touch Up last validated: %ld\n", filtered_Caudal_Up_Touch_Validated);
                         }
 #endif
                         touch_state = WAIT_FOR_TOUCH;
@@ -1331,6 +1341,7 @@ void touch_read(void)
                             ESP_LOGI(TAG3, "ME APAGO");
                             first_on = 1;
                             touch_on_state = WAIT_TOUCH_ON;
+                            printf("touch2 Up last validated: %ld\n", filtered_Fuga_Touch_Validated);
                             // touch_duration = 0;
                             // touch_start_time = 0;
                         }

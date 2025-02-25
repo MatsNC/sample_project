@@ -31,6 +31,7 @@
 #include "timer/timer.h"
 #include "wifi/wifi.h"
 #include "i2c/i2c.h"
+#include <string.h>
 
 #define ESP_CHANNEL 1
 
@@ -149,8 +150,9 @@ bool blink_inh = false;
 gpio_state_t press_state = UNPRESSED;
 
 touch_data_t touch_data;
+char touch_status[30];
 
-char touch_val[200] = "Waiting for data..."; /**< Buffer to store the received touch value as a string. */
+char touch_val[350] = "Waiting for data..."; /**< Buffer to store the received touch value as a string. */
 
 #ifndef VALV_MODUL
 
@@ -166,7 +168,7 @@ bool EV6 = 0;
 static touch_state_t touch_state = WAIT_FOR_TOUCH;
 static touch_config_state_t touch_config_state = TOUCH_PAD_ATTEN_VOLTAGE1;
 
-touch_on_state_t touch_on_state;
+touch_on_state_t touch_on_state = WAIT_TOUCH_ON;
 
 int64_t touch_start_time = 0;
 int64_t touch_duration = 0;
@@ -180,6 +182,10 @@ float r_perc = 0.3;
 
 float r = 255 * 0.5;
 float b = 255 * 0.5;
+
+float touch_multiplier = 0.75;
+float touch_multiplier_base = 1.5;
+float touch_mult_beta;
 
 uint32_t r_int;
 uint32_t b_int;
@@ -374,16 +380,17 @@ int eval_touch_in()
     B_Fria_Down = 1;
     B_Fria_Up = 1; // Setea estas variables en los valores correspondientes a la no detección de toque
 
-    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Down > filtered_Caudal_Up) && (filtered_Caudal_Down > 1.5 * filtered_Caudal_Down_Base /*2 * filtered_Caudal_Down_Base*/))
+    if ((filtered_Caudal_Down > filtered_Caudal_Down_Touch_Validated * touch_multiplier) && (filtered_Caudal_Down > filtered_Caudal_Up) && (filtered_Caudal_Down > 1.5 * filtered_Caudal_Down_Base))
     // if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
     {
         touch_act_detect = 1;
         // printf("touch 1 detection\n");
         ESP_LOGI(TAG3, "touch 1 detection\n");
+        strcpy(touch_status, "deteccion de toque c_down");
         filtered_Caudal_Down_Touch_toValidate = filtered_Caudal_Down; // Debo validar si el toque es valido
     }
 
-    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*1.03*/ && (filtered_Caudal_Up > filtered_Caudal_Down) && (filtered_Caudal_Up > 1.5 * filtered_Caudal_Up_Base))
+    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * touch_multiplier) && (filtered_Caudal_Up > filtered_Caudal_Down) && (filtered_Caudal_Up > 1.5 * filtered_Caudal_Up_Base))
     // if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
     {
         touch_act_detect = 3;
@@ -394,16 +401,17 @@ int eval_touch_in()
 
     //==================================== aca va la deteccion para nivel y fuga ==========================//
 
-    if ((filtered_Nivel > filtered_Nivel_Touch_Validated * 0.5) /*1.03*/ && (filtered_Nivel > filtered_Fuga) && (filtered_Nivel > 1.5 * filtered_Nivel_Base))
+    if ((filtered_Nivel > filtered_Nivel_Touch_Validated * touch_multiplier) && (filtered_Nivel > filtered_Fuga) && (filtered_Nivel > 1.5 * filtered_Nivel_Base))
     // if (filtered_Nivel > 1.1 * filtered_Nivel_Base)
     {
         touch_act_detect = 2;
         // printf("touch 1 detection\n");
         ESP_LOGI(TAG3, "touch 2 detection\n");
+        strcpy(touch_status, "deteccion de toque nivel");
         filtered_Nivel_Touch_toValidate = filtered_Nivel; // Debo validar si el toque es valido
     }
 
-    if ((filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5) /*1.03*/ && (filtered_Fuga > filtered_Nivel) && (filtered_Fuga > 1.5 * filtered_Fuga_Base))
+    if ((filtered_Fuga > filtered_Fuga_Touch_Validated * touch_multiplier) && (filtered_Fuga > filtered_Nivel) && (filtered_Fuga > 1.5 * filtered_Fuga_Base))
     // if (filtered_Fuga > 1.1 * filtered_Fuga_Base)
     {
         touch_act_detect = 4;
@@ -450,34 +458,37 @@ static esp_err_t init_led_strip(void)
 
 void calib_cap_inputs(void)
 {
-    if (filtered_Caudal_Down > 1.1 * filtered_Caudal_Down_Base)
+    if (filtered_Caudal_Down > touch_multiplier_base * filtered_Caudal_Down_Base)         //subir el umbral acá porque me parece que lo guarda mal y probar
     {
         filtered_Caudal_Down_Touch = filtered_Caudal_Down;
-        filtered_Caudal_Down_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Down_Touch);
+        
+        //touch_mult_beta = (float) (filtered_Caudal_Down_Touch / filtered_Caudal_Down_Base);
+
+        filtered_Caudal_Down_Touch_Validated = (uint32_t)(touch_multiplier * filtered_Caudal_Down_Touch);
         printf("touch 1 base = %ld\n ", filtered_Caudal_Down_Touch_Validated);
     }
 
-    if (filtered_Caudal_Up > 1.1 * filtered_Caudal_Up_Base)
+    if (filtered_Caudal_Up > touch_multiplier_base * filtered_Caudal_Up_Base)
     {
         filtered_Caudal_Up_Touch = filtered_Caudal_Up;
-        filtered_Caudal_Up_Touch_Validated = (uint32_t)(0.9 * filtered_Caudal_Up_Touch);
+        filtered_Caudal_Up_Touch_Validated = (uint32_t)(touch_multiplier * filtered_Caudal_Up_Touch);
         printf("touch 3 base = %ld\n ", filtered_Caudal_Up_Touch_Validated);
     }
 
-    if (filtered_Nivel > 1.1 * filtered_Nivel_Base)
+    if (filtered_Nivel > touch_multiplier_base * filtered_Nivel_Base)
     {
         filtered_Nivel_Base_Touch = filtered_Nivel;
-        filtered_Nivel_Touch_Validated = (uint32_t)(0.9 * filtered_Nivel_Base_Touch);
+        filtered_Nivel_Touch_Validated = (uint32_t)(touch_multiplier * filtered_Nivel_Base_Touch);
         printf("touch 1 base = %ld\n ", filtered_Nivel_Touch_Validated);
     }
 
-    if (filtered_Fuga > 1.1 * filtered_Fuga_Base)
+    if (filtered_Fuga > touch_multiplier_base * filtered_Fuga_Base)
     {
         filtered_Fuga_Base_Touch = filtered_Fuga;
-        filtered_Fuga_Touch_Validated = (uint32_t)(0.9 * filtered_Fuga_Base_Touch);
+        filtered_Fuga_Touch_Validated = (uint32_t)(touch_multiplier * filtered_Fuga_Base_Touch);
         printf("touch 3 base = %ld\n ", filtered_Fuga_Touch_Validated);
     }
-    if (filtered_Touch_ON > 1.17 /* 1.4 */ * filtered_Touch_ON_Base)
+    if (filtered_Touch_ON > 1.17 * filtered_Touch_ON_Base)
     {
         filtered_ON_Touch = (uint32_t)(0.95 * filtered_Touch_ON);
     }
@@ -856,38 +867,49 @@ void touch_read(void)
     touch_pad_read_raw_data(Touch_Caudal_Baja, &filtered_Caudal_Down);
     touch_pad_read_raw_data(Touch_Caudal_Sube, &filtered_Caudal_Up);
     touch_pad_read_raw_data(Touch_ON, &filtered_Touch_ON);
-    update_touch_average(filtered_Touch_ON);
+    update_touch_average(filtered_Nivel);
 
-    touch_data.received_data1 = filtered_Touch_ON;
-    // touch_data.received_data1 = touch_avg;
-    touch_data.received_data2 = filtered_ON_Touch;
+    touch_data.received_data1 = filtered_Caudal_Up_Touch_Validated * touch_multiplier;
+    touch_data.received_data2 = filtered_Fuga_Touch_Validated * touch_multiplier;
+    touch_data.received_data9 = touch_avg;
     touch_data.received_data3 = filtered_Nivel;
     touch_data.received_data4 = filtered_Fuga;
     touch_data.received_data5 = filtered_Caudal_Down;
     touch_data.received_data6 = filtered_Caudal_Up;
+    touch_data.received_data7 = filtered_Nivel_Touch_Validated * touch_multiplier;
+    touch_data.received_data8 = filtered_Caudal_Down_Touch_Validated * touch_multiplier;
+
+    if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * touch_multiplier) || (filtered_Fuga > filtered_Fuga_Touch_Validated * touch_multiplier))
+    {
+        strcpy(touch_status, "deteccion de toque on");
+    }
+    // else
+    // {
+    //     touch_status[0] = '\0';
+    // }
 
 #if NEW_CODE == 1 // Esta seccion del codigo es para resetear los valores de cmparacion de las entradas validados cuando superan un determinado valor
     if (calib_stage == CALIB_STAGE_3)
     {
-        if (filtered_Caudal_Up_Touch_Validated > 400000)
+        if (filtered_Caudal_Up_Touch_Validated > 500000)    //cambiar por valores relativos (no absolutos)
         {
             filtered_Caudal_Up_Touch_Validated = 0.9 * filtered_Caudal_Up_Base;
             ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
-        if (filtered_Caudal_Down_Touch_Validated > 400000)
+        if (filtered_Caudal_Down_Touch_Validated > 500000)
         {
             filtered_Caudal_Down_Touch_Validated = 0.9 * filtered_Caudal_Down_Base;
             ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
-        if (filtered_Nivel_Touch_Validated > 400000)
+        if (filtered_Nivel_Touch_Validated > 500000)
         {
             filtered_Nivel_Touch_Validated = 0.9 * filtered_Nivel_Base;
             ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
         }
 
-        if (filtered_Fuga_Touch_Validated > 400000)
+        if (filtered_Fuga_Touch_Validated > 500000)
         {
             filtered_Fuga_Touch_Validated = 0.9 * filtered_Fuga_Base;
             ESP_LOGI("TOUCH", "ERROR EN CUENTAS");
@@ -969,10 +991,10 @@ void touch_read(void)
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON base = %ld" ANSI_COLOR_RESET "\n", filtered_Touch_ON_Base);
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_ON_Touch);
 #else
-            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
-            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up_Touch_Validated );
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch 1 ON = %ld" ANSI_COLOR_RESET "\n", filtered_Caudal_Up);
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch 1 ON threshold = %ld" ANSI_COLOR_RESET "\n", (uint32_t)(filtered_Caudal_Up_Touch_Validated * 0.8));
             ESP_LOGI("TOUCH ON", ANSI_COLOR_YELLOW "touch 2 ON = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga);
-            ESP_LOGI("TOUCH ON", ANSI_COLOR_YELLOW "touch 2 ON threshold = %ld" ANSI_COLOR_RESET "\n", filtered_Fuga_Touch_Validated );
+            ESP_LOGI("TOUCH ON", ANSI_COLOR_YELLOW "touch 2 ON threshold = %ld" ANSI_COLOR_RESET "\n", (uint32_t)(filtered_Fuga_Touch_Validated * 0.8));
             ESP_LOGI("TOUCH ON", ANSI_COLOR_MAGENTA "touch STATE = %d", touch_state);
 #endif
             touch_pad_read_raw_data(Touch_Nivel, &filtered_Nivel_Ant);
@@ -1059,7 +1081,7 @@ void touch_read(void)
             get_value_from_nvs("storage", "filtDwn", &cal_filt_dwn_nvs);
             get_value_from_nvs("storage", "filtNiv", &cal_filt_nivel_nvs);
             get_value_from_nvs("storage", "filtFuga", &cal_filt_fuga_nvs);
-            get_value_from_nvs("storage", "filtON", &cal_filt_on_nvs);
+            // get_value_from_nvs("storage", "filtON", &cal_filt_on_nvs);
             if (!filtered_Caudal_Up_Touch_Validated)
                 filtered_Caudal_Up_Touch_Validated = cal_filt_up_nvs;
             if (!filtered_Caudal_Down_Touch_Validated)
@@ -1068,16 +1090,16 @@ void touch_read(void)
                 filtered_Nivel_Touch_Validated = cal_filt_nivel_nvs;
             if (!filtered_Fuga_Touch_Validated)
                 filtered_Fuga_Touch_Validated = cal_filt_fuga_nvs;
-            if (!filtered_ON_Touch)
-                filtered_ON_Touch = cal_filt_on_nvs;
+            // if (!filtered_ON_Touch)
+            //     filtered_ON_Touch = cal_filt_on_nvs;
 #endif
             ESP_LOGI(TAG3, "Filtered Up: %ld\n", filtered_Caudal_Up_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Dwn: %ld\n", filtered_Caudal_Down_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Nivel: %ld\n", filtered_Nivel_Touch_Validated);
             ESP_LOGI(TAG3, "Filtered Fuga: %ld\n", filtered_Fuga_Touch_Validated);
-            ESP_LOGI(TAG3, "Filtered Touch ON: %ld\n", filtered_ON_Touch);
+            // ESP_LOGI(TAG3, "Filtered Touch ON: %ld\n", filtered_ON_Touch);
 
-            if ((!filtered_Caudal_Up_Touch_Validated) || (!filtered_Caudal_Down_Touch_Validated) || (!filtered_Nivel_Touch_Validated) || (!filtered_Fuga_Touch_Validated) || (!filtered_ON_Touch))
+            if ((!filtered_Caudal_Up_Touch_Validated) || (!filtered_Caudal_Down_Touch_Validated) || (!filtered_Nivel_Touch_Validated) || (!filtered_Fuga_Touch_Validated) /* || (!filtered_ON_Touch)*/)
             {
                 for (int i = 0; i < LED_STRIP_MAX_LEDS; i++)
                 {
@@ -1124,7 +1146,7 @@ void touch_read(void)
             }
             led_strip_refresh(led_strip);
 
-            if (filtered_Fuga_Touch_Validated == 0 || filtered_Caudal_Up_Touch_Validated == 0 || filtered_Nivel_Touch_Validated == 0 || filtered_Caudal_Down_Touch_Validated == 0 || filtered_ON_Touch == 0)
+            if (filtered_Fuga_Touch_Validated == 0 || filtered_Caudal_Up_Touch_Validated == 0 || filtered_Nivel_Touch_Validated == 0 || filtered_Caudal_Down_Touch_Validated == 0 /*|| filtered_ON_Touch == 0*/)
             {
                 calib_stage = CALIB_STAGE_1;
             }
@@ -1142,7 +1164,8 @@ void touch_read(void)
 #elif ENC_VOLANTE == 0
                 if (filtered_Touch_ON > filtered_ON_Touch)
 #else
-                if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * 0.5) /*|| (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5)*/)
+
+                if ((filtered_Caudal_Up > filtered_Caudal_Up_Touch_Validated * touch_multiplier))
 #endif
 
                 {
@@ -1152,7 +1175,7 @@ void touch_read(void)
                     touch_on_state = TOUCH_ON_PRESSED;
                 }
 
-                if (filtered_Fuga > filtered_Fuga_Touch_Validated * 0.5)
+                if (filtered_Fuga > filtered_Fuga_Touch_Validated * touch_multiplier)
                 {
                     on_state_but = 2;
                     touch_start_time = esp_timer_get_time();
@@ -1167,7 +1190,7 @@ void touch_read(void)
 #elif ENC_VOLANTE == 0
                 if (filtered_Touch_ON <= filtered_ON_Touch)
 #else
-                if ((filtered_Caudal_Up < filtered_Caudal_Up_Touch_Validated * 0.5) && (1 == on_state_but) /*|| (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5)*/)
+                if ((filtered_Caudal_Up < filtered_Caudal_Up_Touch_Validated * touch_multiplier) && (1 == on_state_but))
 #endif
 
                 {
@@ -1175,7 +1198,7 @@ void touch_read(void)
                     touch_on_state = TOUCH_ON_RELEASED;
                 }
 
-                if ((filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5) && (2 == on_state_but) /*|| (filtered_Fuga < filtered_Fuga_Touch_Validated * 0.5)*/)
+                if ((filtered_Fuga < filtered_Fuga_Touch_Validated * touch_multiplier) && (2 == on_state_but))
 
                 {
                     ESP_LOGI(TAG3, "TOUCH ON RELEASED = %ld\n", filtered_Touch_ON);
@@ -1308,6 +1331,7 @@ void touch_read(void)
                         touch_state = WAIT_FOR_TOUCH;
                         B_Fria_Down = 1;
                         printf("touch 1 rejected\n");
+                        touch_status[0] = '\0';
                         printf("touch 1 prev validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
                     }
                 }
@@ -1349,6 +1373,7 @@ void touch_read(void)
                         touch_state = WAIT_FOR_TOUCH;
                         B_Caliente_Down = 1;
                         printf("touch 2 rejected\n");
+                        touch_status[0] = '\0';
                         printf("touch 2 prev validated value: %ld\n", filtered_Nivel_Touch_Validated);
                     }
                 }
@@ -1424,7 +1449,7 @@ void touch_read(void)
                 }
 
                 filtered_Caudal_Down_Touch_Validated = filtered_Caudal_Down_Touch_toValidate; // valido toque
-                printf("touch 1 validated\n");
+                printf("touch 1 validated\n");                
                 printf("touch 1 validated value: %ld\n", filtered_Caudal_Down_Touch_Validated);
                 // ESP_ERROR_CHECK(save_value_to_nvs("storage", "filtered_Caudal_Down_Touch_Validated", filtered_Caudal_Down_Touch_Validated));
                 break;
@@ -1455,7 +1480,7 @@ void touch_read(void)
                 }
 
                 filtered_Nivel_Touch_Validated = filtered_Nivel_Touch_toValidate; // valido toque
-                printf("touch 2 validated\n");
+                printf("touch 2 validated\n");                
                 printf("touch 2 validated value: %ld\n", filtered_Nivel_Touch_Validated);
                 break;
 

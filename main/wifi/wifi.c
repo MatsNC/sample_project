@@ -163,12 +163,14 @@ esp_err_t get_touch_data_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "text/html");
 
     int ret = snprintf(touch_val, sizeof(touch_val),
-                       "Received touch values:<br>Touch ON: %lu<br>Touch ON Base: %lu<br>"
-                       "Touch Caliente Menos: %lu<br>Touch Caliente Mas: %lu<br>"
-                       "Touch Fria Menos: %lu<br>Touch Fria Mas: %lu",
+                       "Received touch values:<br>Umbral fria +: %lu<br>Umbral Caliente +: %lu<br>"
+                       "Touch Caliente -: %lu<br>Touch Caliente +: %lu<br>"
+                       "Touch Fria -: %lu<br>Touch Fria +: %lu<br><span style='color:green;'>%s</span><br><br>"
+                       "<br>Umbral Caliente -: %lu<br>Umbral Fria -: %lu"
+                       "<br>Touch_avg caliente -: %lu",
                        touch_data.received_data1, touch_data.received_data2,
                        touch_data.received_data3, touch_data.received_data4,
-                       touch_data.received_data5, touch_data.received_data6);
+                       touch_data.received_data5, touch_data.received_data6, touch_status, touch_data.received_data7, touch_data.received_data8, touch_data.received_data9);
 
     if (ret < 0 || ret >= sizeof(touch_val))
     {

@@ -11,7 +11,7 @@ void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        ESP_LOGI(TAG_WIFI, "Disconnected from Wi-Fi, retrying...");
+        //ESP_LOGI(TAG_WIFI, "Disconnected from Wi-Fi, retrying...");
         esp_wifi_connect();
     }
     // else if (event_id == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)

@@ -6,9 +6,13 @@ idf_component_register(SRCS
     "i2c/i2c_master.c"
     "i2c/i2c_slave.c"
     "webserver/webserver.c"
+    "capacitivos/capacitivos.c"
+    "led_strip_local/led_strip_local.c"
     INCLUDE_DIRS "."
     "nvs"
     "timer"
     "wifi"
     "i2c"
-    "webserver")
+    "webserver"
+    "capacitivos"
+    "led_strip_local")
